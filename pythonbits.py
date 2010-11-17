@@ -268,7 +268,7 @@ class imdb(object):
 		"""Scrapes html from IMDB for information."""
 
 		# director
-		self.director = re.findall(r'director.*?name/nm\d+/\';">([\-\s\w\d\.]+)</a>', page, re.MULTILINE)
+		self.director = re.findall(r'Director.*\n+\D*\d>\D*<a\s*href="/name/nm\d+/">([\w\-\d\s]+)</a>', page, re.MULTILINE)
 		self.__setitem__("director", self.director)
 
 		# tagline
@@ -298,12 +298,12 @@ class imdb(object):
 		self.__setitem__("title", self.title)
 
 		# genre
-		self.genre = re.findall(r'<a href="/Sections/Genres/[\w\d\s\-]+/">([\w\d\s\-]+)</a>',
+		self.genre = re.findall(r'<a href="/genre/\w+">(\w+)</a>',
 								page, re.MULTILINE)
 		self.__setitem__("genre", self.genre)
 
 		# release date
-		match = re.findall(r'<h\d>Release Date:</h\d>\n?<div class="info-content">\n*([^<\n]+)',
+		match = re.findall(r'<h\d class="inline">Release Date:</h\d>\n?\n*([^<\n]+)',
 						   page, re.MULTILINE)
 		if match:
 			self.releasedate = match[0]
@@ -325,7 +325,7 @@ class imdb(object):
 		self.__setitem__("writers", self.writers)
 
 		# rating
-		match = re.findall(r'(\d.\d)/10', page, re.MULTILINE)
+		match = re.findall(r'(\d.\d)<span>/10', page, re.MULTILINE)
 		if match:
 			self.rating = match[0]
 		self.__setitem__("rating", self.rating)
@@ -343,13 +343,13 @@ class imdb(object):
 		self.__setitem__("cast", self.cast)
 
 		# runtime
-		match = re.findall(r'<h\d>Runtime:</h\d>\n?<div class="info-content">\n*([^<\n]+)', page, re.MULTILINE)
+		match = re.findall(r'<h\d>Runtime:</h\d>\n*([^<\n]+)', page, re.MULTILINE)
 		if match:
 			self.runtime = decode(match[0].strip())
 		self.__setitem__("runtime", self.runtime)
 
 		# countries
-		self.country = map(decode, re.findall(r'<a href="/Sections/Countries/\w+/">\n*([^<]+)', page, re.MULTILINE))
+		self.country = map(decode, re.findall(r'<a href="/country/\w+">(\w+\s*\w*)</a>', page, re.MULTILINE))
 		self.__setitem__("country", self.country)
 
 		# mpaa rating
@@ -360,7 +360,7 @@ class imdb(object):
 		self.__setitem__("mpaa", self.mpaa)
 
 		# languages
-		self.languages = map(decode, re.findall(r'<a href="/Sections/Languages/\w+/">\n*([^<\n]+)', page, re.MULTILINE))
+		self.languages = map(decode, re.findall(r'<a href="/language/\w+">(\w+\s*\w*)</a>', page, re.MULTILINE))
 		self.__setitem__("languages", self.languages)
 
 		# also known as
