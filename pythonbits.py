@@ -41,6 +41,7 @@ import sys
 import re
 import subprocess
 import tempfile
+import os
 import base64
 import json
 from optparse import OptionParser, SUPPRESS_HELP
@@ -57,6 +58,9 @@ def __logerror(msg):
 
 if __htmlparser:
 	__converter = HTMLParser()
+
+def tempdir():
+    return tempfile.gettempdir()+os.sep
 
 def decode(text):  
 	
@@ -469,7 +473,11 @@ class imdb(object):
 
 	def findMediaInfo(self, path):
 		try:
-			self.mediainfo = subprocess.Popen([r"mediainfo",path], stdout=subprocess.PIPE).communicate()[0]
+			if(os.name=="nt"):
+				##Must pass Shell=True on Windows, but this is a potential security issue
+				self.mediainfo = subprocess.Popen([r"mediainfo",path], shell=True, stdout=subprocess.PIPE).communicate()[0]
+			else:
+                                self.mediainfo = subprocess.Popen([r"mediainfo",path], stdout=subprocess.PIPE).communicate()[0]
 		except OSError:
 			sys.stderr.write("Error: Media Info not installed, refer to http://mediainfo.sourceforge.net/en for installation")
 			exit(1)
@@ -486,26 +494,26 @@ class Imgur(object):
 		
 	def getDuration(self):
 		try:
-			self.ffmpeg = subprocess.Popen([r"ffmpeg","-i",self.path], stderr=subprocess.PIPE).communicate()[1]
+			self.ffmpeg = subprocess.Popen([r"ffmpeg","-i",self.path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
 			exit(1)
-		self.duration = re.findall(r'Duration:\D(\d{2}):(\d{2}):(\d{2})', self.ffmpeg)
+		self.duration = re.findall(r'Duration:\D(\d{2}):(\d{2}):(\d{2})', self.ffmpeg.stdout.read())
 		self.duration = int(self.duration[0][0]) * 3600 + int(self.duration[0][1]) * 60 + int(self.duration[0][2])
 		
 	def upload(self):
 		self.getDuration()
 		try:
-			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 2)/10), "-vframes", "1",	"-i", self.path , "-y", "-sameq", "-f", "image2", "/tmp/screen1.png" ], stdout=2).wait()
-			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 8)/10), "-vframes", "1",	"-i", self.path , "-y", "-sameq", "-f", "image2", "/tmp/screen2.png" ], stdout=2).wait()
+			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 2)/10), "-vframes", "1",	"-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen1.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
+			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 8)/10), "-vframes", "1",	"-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen2.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
 			exit(1)
-		screen = open('/tmp/screen1.png', 'r')
+		screen = open(tempdir()+'screen1.png', 'rb')
 		image = screen.read()
 		screen.close()
 		imageencoded = base64.encodestring(image)
-		screen = open('/tmp/screen2.png', 'r')
+		screen = open(tempdir()+'screen2.png', 'rb')
 		image = screen.read()
 		screen.close()
 		params	= urllib.urlencode({'key' : self.key, 'image' : imageencoded})
