@@ -125,7 +125,7 @@ class search(object):
 		self.opener = _MyOpener()
 		self.feed = self.opener.open("http://www.google.com/search?q=%s+site%%3Aimdb.com" 
 									 % searchString.strip().replace(" ", "+")).read()
-		templist = re.findall(r'<a href="(http://www.imdb.com/title/tt\d+/)" class=l>(.*?)(?=</a>)',
+		templist = re.findall(r'<a href="(http://www.imdb.com/title/tt\d+/)" class=l .+?>(.*?)(?=</a>)',
 							  self.feed, re.DOTALL)
 		for i in templist:
 			if len(i) > 1:
