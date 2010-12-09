@@ -145,7 +145,7 @@ class pythonbits_config:
 	def load_strings(self):
 		self.strings={}
 		for node in self.xml.getElementsByTagName("string"):
-			self.strings[node.getAttribute("name")]=node.firstChild.data
+			self.strings[node.getAttribute("name")]=node.firstChild.data.replace('\n','').replace('\t','')
 
 	def add_string(self, name, data):
 		container = self.xml.getElementsByTagName("pythonbits")[0]
