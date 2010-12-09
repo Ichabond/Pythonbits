@@ -1,30 +1,30 @@
 #!/usr/bin/env python
 # coding =<iso-8859-15>
-#	Copyright (c) 2010, scootypuffjr
-#	Copyright (c) 2010, Apollo
-#	All rights reserved.
-#	
-#	Redistribution and use in source and binary forms, with or without
-#	modification, are permitted provided that the following conditions are met:
-#		* Redistributions of source code must retain the above copyright
-#		  notice, this list of conditions and the following disclaimer.
-#		* Redistributions in binary form must reproduce the above copyright
-#		  notice, this list of conditions and the following disclaimer in the
-#		  documentation and/or other materials provided with the distribution.
-#		* Neither the name of the organization nor the
-#		  names of its contributors may be used to endorse or promote products
-#		  derived from this software without specific prior written permission.
-#	
-#	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-#	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-#	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#	DISCLAIMED. IN NO EVENT SHALL SCOOTYPUFFJR BE LIABLE FOR ANY
-#	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-#	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-#	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-#	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#       Copyright (c) 2010, scootypuffjr
+#       Copyright (c) 2010, Apollo
+#       All rights reserved.
+#       
+#       Redistribution and use in source and binary forms, with or without
+#       modification, are permitted provided that the following conditions are met:
+#               * Redistributions of source code must retain the above copyright
+#                 notice, this list of conditions and the following disclaimer.
+#               * Redistributions in binary form must reproduce the above copyright
+#                 notice, this list of conditions and the following disclaimer in the
+#                 documentation and/or other materials provided with the distribution.
+#               * Neither the name of the organization nor the
+#                 names of its contributors may be used to endorse or promote products
+#                 derived from this software without specific prior written permission.
+#       
+#       THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+#       ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+#       WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#       DISCLAIMED. IN NO EVENT SHALL SCOOTYPUFFJR BE LIABLE FOR ANY
+#       DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+#       (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#       LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#       ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#       (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#       SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Python module to retrieve information from imdb.com and Media Info for baconbits"""
 
@@ -44,8 +44,8 @@ import tempfile
 import os
 import base64
 import json
+from xml.dom.minidom import Document, parse
 from optparse import OptionParser, SUPPRESS_HELP
-
 
 __htmlparser = True
 try:
@@ -79,38 +79,92 @@ def decode(text):
 		else:  
 			uchr = lambda value: value > 255 and unichr(value) or chr(value)  
   
-		def entitydecode(match, uchr=uchr):	 
-			entity = match.group(1)	 
-			if entity.startswith('#x'):	 
+		def entitydecode(match, uchr=uchr):      
+			entity = match.group(1)  
+			if entity.startswith('#x'):      
 				return uchr(int(entity[2:], 16))  
 			elif entity.startswith('#'):  
 				return uchr(int(entity[1:]))  
-			elif entity in name2codepoint:	
-				return uchr(name2codepoint[entity])	 
+			elif entity in name2codepoint:  
+				return uchr(name2codepoint[entity])      
 			else:  
 				return match.group(0)  
 		return charrefpat.sub(entitydecode, text)  
 
 class FetchError(Exception):
 	def __init__(self, value):
-		self.parameter = value		
-	def __str__(self):				
+		self.parameter = value          
+	def __str__(self):                              
 		return repr(self.parameter)
 
 class URLError(Exception):
 	def __init__(self, value):
-		self.parameter = value		
-	def __str__(self):				
+		self.parameter = value          
+	def __str__(self):                              
 		return repr(self.parameter)
 
 class Error404(Exception):
 	def __init__(self, value):
-		self.parameter = value		
-	def __str__(self):				
+		self.parameter = value          
+	def __str__(self):                              
 		return repr(self.parameter)
 
 class _MyOpener(urllib.FancyURLopener):
 		version = 'Opera/9.80 (fX11; Linux i686; U; en) Presto/2.2.15 Version/10.00'
+
+class pythonbits_config:
+	"""Class for holding pythonbits config strings. read() or create_dom() must be called before first use. Access strings through obj.strings[key]"""
+	def __init__(self):
+		self.strings={}
+		
+	def __del__(self):
+		self.file.close()
+
+	def read(self, file=0):
+		if(file==0):
+			file=self.file
+		self.xml = parse(file)
+		self.load_strings()
+
+	def write(self, file=0):
+		if(file==0):
+			file=self.file
+		location = self.file.name
+		file.close()
+		file = open(location, "w")
+		file.write(self.xml.toprettyxml())
+		file.close()
+		self.file = open(location, "r")
+
+	def set_location(self, location):
+		try:
+			self.file = open(location, "r")
+		except IOError:
+			self.file = open(location, "w")
+
+	def load_strings(self):
+		self.strings={}
+		for node in self.xml.getElementsByTagName("string"):
+			self.strings[node.getAttribute("name")]=node.firstChild.data
+
+	def add_string(self, name, data):
+		container = self.xml.getElementsByTagName("pythonbits")[0]
+		stringtag = self.xml.createElement("string")
+		stringtag.setAttribute("name", name)
+		stringtag.appendChild(self.xml.createTextNode(data))
+		container.appendChild(stringtag)
+		self.load_strings()
+
+	def del_string(self, name):
+		del self.strings[name]
+		###Horrible hack. Write real code.
+		self.create_dom()
+		for (name, entry) in self.strings.items():
+			self.add_string(name, entry)
+
+	def create_dom(self):
+		self.xml = Document()
+		self.xml.appendChild(self.xml.createElement("pythonbits"))
 
 class search(object):
 
@@ -123,10 +177,8 @@ class search(object):
 		self.searchString = searchString
 		self.results = []
 		self.opener = _MyOpener()
-		self.feed = self.opener.open("http://www.google.com/search?q=%s+site%%3Aimdb.com" 
-									 % searchString.strip().replace(" ", "+")).read()
-		templist = re.findall(r'<a href="(http://www.imdb.com/title/tt\d+/)" .*?>(.*?)(?=</a>)',
-							  self.feed, re.DOTALL)
+		self.feed = self.opener.open(conf.strings["google_url"] % searchString.strip().replace(" ", "+")).read()
+		templist = re.findall(conf.strings["google_imdb_result_re"], self.feed, re.DOTALL)
 		for i in templist:
 			if len(i) > 1:
 				self.results.append((re.sub(r"<[^>]+>","",decode(i[1])),i[0]))
@@ -192,7 +244,7 @@ class imdb(object):
 		self.mediainfo = ''
 		self.trivia = ''
 		
-		if not re.match(r"^(?:http://)?(?:www\.)?imdb\.com/title/tt\d+/?$"	,self.url):
+		if not re.match(conf.strings["imdb_url_re"] ,self.url):
 			raise URLError("Invalid URL")
 
 		if self.url.endswith("/"):
@@ -272,72 +324,65 @@ class imdb(object):
 		"""Scrapes html from IMDB for information."""
 
 		# director
-		self.director = re.findall(r'Director.*\n+\D*\d>\D*<a\s*href="/name/nm\d+/">([\w\-\d\s]+)</a>', page, re.MULTILINE)
+		self.director = re.findall(conf.strings["imdb_director_re"], page, re.MULTILINE)
 		self.__setitem__("director", self.director)
 
 		# tagline
-		match = re.findall(r'<h\d>Tagline:</h\d>\n*<div class="info-content">\n*(.*?)\n*(?:</div>|<a)',
-						   page, re.DOTALL)
+		match = re.findall(conf.strings["imdb_tagline_re"], page, re.DOTALL)
 		if match:
 			self.tagline = decode(match[0])
 		self.__setitem__("tagline", self.tagline)
 		
 		# short description
-		match = re.findall(r'description" content="([^"]+)(?= Visit)', page,re.MULTILINE)
+		match = re.findall(conf.strings["imdb_description_re"], page,re.MULTILINE)
 		if match:
 			self.shortdescription = decode(match[0])
 		self.__setitem__("shortdescription", self.shortdescription)
 
 		# plot
-		match = re.findall(r'info-content">\n*([^<]+) <a class=".*?" href="/title/tt[0-9]+/plotsummary"',
-						   page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_plot_re"], page, re.MULTILINE)
 		if match:
 			self.plot = match[0]
 		self.__setitem__("plot", self.plot)
 
 		# title
-		match = re.findall(r'<title>([^<(]+)', page)
+		match = re.findall(conf.strings["imdb_title_re"], page)
 		if match:
 			self.title = decode(match[0].strip())
 		self.__setitem__("title", self.title)
 
 		# genre
-		self.genre = re.findall(r'<a href="/genre/\w+">(\w+)</a>',
-								page, re.MULTILINE)
+		self.genre = re.findall(conf.strings["imdb_genre_re"], page, re.MULTILINE)
 		self.__setitem__("genre", self.genre)
 
 		# release date
-		match = re.findall(r'<h\d class="inline">Release Date:</h\d>\n?\n*([^<\n]+)',
-						   page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_releasedate_re"], page, re.MULTILINE)
 		if match:
 			self.releasedate = match[0]
 		self.__setitem__("releasedate", self.releasedate)
 
 		# keywords
-		self.plotkeywords = map(decode, re.findall(r'<a href="/keyword/[\w\s\d\-]+/">([^<]+)',
-												   page, re.MULTILINE))
+		self.plotkeywords = map(decode, re.findall(conf.strings["imdb_plotkeywords_re"],page, re.MULTILINE))
 		self.__setitem__("plotkeywords", self.plotkeywords)
 
 		# awards
-		match = re.findall(r'<h\d>Awards:</h\d>\n?<div class="info-content">\n*([^<]+)', page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_awards_re"], page, re.MULTILINE)
 		if match:
 			self.awards = decode(match[0].replace('\n',' ').strip())
 		self.__setitem__("awards", self.awards)
 
 		# writers
-		self.writers = map(decode, re.findall(r'writerlist/[^>]+>([^<]+)', page, re.MULTILINE))
+		self.writers = map(decode, re.findall(conf.strings["imdb_writers_re"], page, re.MULTILINE))
 		self.__setitem__("writers", self.writers)
 
 		# rating
-		match = re.findall(r'(\d.\d)<span>/10', page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_rating_re"], page, re.MULTILINE)
 		if match:
 			self.rating = match[0]
 		self.__setitem__("rating", self.rating)
 
 		# cast
-		castsearch = re.compile(r'name/nm\d+/.*?>([^<]+)</a></td><td class="\w{3}">(?: ... )?</td>' + \
-					  '<td class="char">(?:<a href=(?:\'|")/character/ch\d+/(?:\'|")>)?([^<]' + \
-					  '+)<[^>]+>(?: / (?:<a href="/character/ch\d+/">)?([^<]+)<)?', re.DOTALL)
+		castsearch = re.compile(conf.strings["imdb_castsearch_re"], re.DOTALL)
 		self.cast = re.findall( castsearch, page) 
 		x = 0
 		for member in self.cast:
@@ -347,28 +392,27 @@ class imdb(object):
 		self.__setitem__("cast", self.cast)
 
 		# runtime
-		match = re.findall(r'<h\d>Runtime:</h\d>\n*([^<\n]+)', page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_runtime_re"], page, re.MULTILINE)
 		if match:
 			self.runtime = decode(match[0].strip())
 		self.__setitem__("runtime", self.runtime)
 
 		# countries
-		self.country = map(decode, re.findall(r'<a href="/country/\w+">(\w+\s*\w*)</a>', page, re.MULTILINE))
+		self.country = map(decode, re.findall(conf.strings["imdb_country_re"], page, re.MULTILINE))
 		self.__setitem__("country", self.country)
 
 		# mpaa rating
-		match = map(decode, re.findall(r'<h\d><a href="/mpaa">MPAA</a>:</h\d>\n?<div class="info-content">\n*([^<\n]+)',
-						   page, re.MULTILINE))
+		match = map(decode, re.findall(conf.strings["imdb_mpaa_re"], page, re.MULTILINE))
 		if match:
 			self.mpaa = decode(match[0])
 		self.__setitem__("mpaa", self.mpaa)
 
 		# languages
-		self.languages = map(decode, re.findall(r'<a href="/language/\w+">(\w+\s*\w*)</a>', page, re.MULTILINE))
+		self.languages = map(decode, re.findall(conf.strings["imdb_languages_re"], page, re.MULTILINE))
 		self.__setitem__("languages", self.languages)
 
 		# also known as
-		match = re.findall(r'<h5>Also Known As:</h5><div class="info-content">([^\n]+)', page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_alsoknownas_re"], page, re.MULTILINE)
 		if match:
 			templist = decode(match[0]).split('<br>')
 			for i in templist:
@@ -378,38 +422,37 @@ class imdb(object):
 			
 
 		# color
-		match = re.findall(r'<a href="/List\?color-info=Color&&heading=\d+;Color">\n*([^<]+)', page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_color_re"], page, re.MULTILINE)
 		if match:
 			self.color = match[0]
 		self.__setitem__("color", self.color)
 
 		# aspect ratio
-		match = re.findall(r'<h\d>Aspect Ratio:</h\d>\n+<div class="info-content">\n*([^<]+)', page, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_aspectratio_re"], page, re.MULTILINE)
 		if match:
 			self.aspectratio = match[0].strip()
 		self.__setitem__("aspectratio", self.aspectratio)
 
 		# sound mixes
-		self.soundmix = re.findall(r'<a href="/List\?sound-mix[^>]+>\n*([^<\n]+)', page, re.MULTILINE)
+		self.soundmix = re.findall(conf.strings["imdb_soundmix_re"], page, re.MULTILINE)
 		self.__setitem__("soundmix", self.soundmix)
 
 		# filming locations
-		self.filminglocations = map(decode, re.findall(r'locations\+including[^>]+>\n*([^<\n]+)',
-													   page, re.MULTILINE))
+		self.filminglocations = map(decode, re.findall(conf.strings["imdb_filminglocations_re"],page, re.MULTILINE))
 		self.__setitem__("filminglocations", self.filminglocations)
 
 		# companies
-		self.company = map(decode, re.findall(r'/company/co\d+[^>]+>\n*([^<]+)', page, re.MULTILINE))
+		self.company = map(decode, re.findall(conf.strings["imdb_company_re"], page, re.MULTILINE))
 		self.__setitem__("company", self.company)
 
 		# trivia
-		match = re.findall(r'<h\d>Trivia:</h\d>(.*?)(?=</div>)', page, re.DOTALL)
+		match = re.findall(conf.strings["imdb_trivia_re"], page, re.DOTALL)
 		if match:
-			self.trivia = decode(re.sub(r'<[^>]+>|more\n*</a>','', match[0], re.DOTALL).replace("\n","").strip())
+			self.trivia = decode(re.sub(conf.strings["imdb_trivia_more_re"],'', match[0], re.DOTALL).replace("\n","").strip())
 		self.__setitem__("trivia", self.trivia)
 
 		# seasons
-		self.seasons = re.findall(r'<a href="episodes#season-[\d\w\-]+">([^<]+)', page )
+		self.seasons = re.findall(conf.strings["imdb_seasons_re"], page )
 		self.__setitem__("seasons", self.seasons)
 
 
@@ -423,7 +466,7 @@ class imdb(object):
 			synopsisPage = self.opener.open(self.url + "/plotsummary").read()
 		except:
 			return False
-		match = re.findall(r'<p class=["\']\w*plot(?:par)?\w*["\']>\n*([^<\n]+)', synopsisPage, re.MULTILINE)
+		match = re.findall(conf.strings["imdb_summary_re"], synopsisPage, re.MULTILINE)
 		if match:
 			self.summary = match
 			return True
@@ -437,12 +480,12 @@ class imdb(object):
 
 		if not self.title:
 			return False
-		results = self.opener.open("http://www.google.com/search?q=site%3Ayoutube.com+" +\
+		results = self.opener.open(conf.strings["google_youtube_url"] +\
 								   urllib.quote(self.title.strip().replace(" ","+"))).read()
-		results = re.findall(r'<a href="(http://www.youtube.com/watch\?v=[\w\d]+)" class=l>(.*?)(?=</a>)', results)
+		results = re.findall(conf.strings["google_youtube_result_re"], results)
 		if results:
 			for result in results:
-				if re.search(self.title, result[1], re.IGNORECASE) and re.search(r'Trailer', result[1], re.IGNORECASE ):
+				if re.search(self.title, result[1], re.IGNORECASE) and re.search(conf.strings["youtube_trailer_re"], result[1], re.IGNORECASE ):
 					self.trailerurl = result[0]
 					return True
 			return False
@@ -463,9 +506,9 @@ class imdb(object):
 			if match:
 				searchstring += "+" + match[0]
 		if searchstring:
-			results = self.opener.open("http://www.google.com/search?q=site%3Awikipedia.org+" +\
+			results = self.opener.open(conf.strings["google_wikipedia_url"] +\
 								   searchstring).read()
-			links = re.findall(r'http://en.wikipedia.org/wiki/[^"]+', results)
+			links = re.findall(conf.strings["wikipedia_url"], results)
 			if links:
 				self.wikiurl = urlparse.urljoin(links[0], urllib.quote(urlparse.urlparse(links[0]).path))
 				return True
@@ -477,7 +520,7 @@ class imdb(object):
 				##Must pass Shell=True on Windows, but this is a potential security issue
 				self.mediainfo = subprocess.Popen([r"mediainfo",path], shell=True, stdout=subprocess.PIPE).communicate()[0]
 			else:
-                                self.mediainfo = subprocess.Popen([r"mediainfo",path], stdout=subprocess.PIPE).communicate()[0]
+				self.mediainfo = subprocess.Popen([r"mediainfo",path], stdout=subprocess.PIPE).communicate()[0]
 		except OSError:
 			sys.stderr.write("Error: Media Info not installed, refer to http://mediainfo.sourceforge.net/en for installation")
 			exit(1)
@@ -487,7 +530,7 @@ class Imgur(object):
 	def __init__(self, path):
 		self.path = path
 		self.imageurl = ['', '']
-		self.key = "bc1d6b50ff5dc9a563ec01583bbd5677"
+		self.key = conf.strings["imgur_key"]
 		self.tries = 0
 		self.duration = ''
 		self.ffmpeg = ''
@@ -504,8 +547,8 @@ class Imgur(object):
 	def upload(self):
 		self.getDuration()
 		try:
-			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 2)/10), "-vframes", "1",	"-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen1.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
-			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 8)/10), "-vframes", "1",	"-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen2.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
+			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 2)/10), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen1.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
+			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 8)/10), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen2.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
 			exit(1)
@@ -516,7 +559,7 @@ class Imgur(object):
 		screen = open(tempdir()+'screen2.png', 'rb')
 		image = screen.read()
 		screen.close()
-		params	= urllib.urlencode({'key' : self.key, 'image' : imageencoded})
+		params  = urllib.urlencode({'key' : self.key, 'image' : imageencoded})
 		params2 = urllib.urlencode({'key' : self.key, 'image' : base64.encodestring(image)})
 		try:
 			socket = urllib2.urlopen("http://api.imgur.com/2/upload.json", params)
@@ -543,13 +586,37 @@ if __name__ == "__main__":
 	usage = "%prog [OPTION]..."
 	epilog = "Standard Operation takes the movie name and the Filename"
 	parser = OptionParser(usage=usage, epilog=epilog, version="%%prog %0.2f" % __version__)
+	parser.add_option("-u", "--update-config", action="store_true", dest="update")
 	(options, args) = parser.parse_args()
+
+
+        if(options.update):
+                try:
+                        conf = pythonbits_config()
+                        conf.set_location("config.xml")
+                        conf.read()
+                        update_url = conf.strings["update_url"]
+                except:
+                        update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
+                del conf
+                opener = _MyOpener()
+                open("config.xml", "w").write(opener.open(update_url).read())
+           
+                                
+	conf = pythonbits_config()
+	conf.set_location("config.xml")
+	try:
+                conf.read()
+        except:
+                __logerror("Cannot open config file")
+                exit(1)
+	
 	if len(args) != 2:
 		__logerror("Not enough arguments, refer to --help for additional info")
 		exit(1)
-	else:
-		filename = args[1]
-		results = search(args[0]).results
+
+	filename = args[1]
+	results = search(args[0]).results
 	if results:
 		movie = imdb(results[0][1])
 		imgur = Imgur(filename)
