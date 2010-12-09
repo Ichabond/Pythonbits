@@ -600,7 +600,11 @@ if __name__ == "__main__":
                         update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
                 del conf
                 opener = _MyOpener()
-                open("config.xml", "w").write(opener.open(update_url).read())
+                newconf = opener.open(update_url)
+                if (newconf.info()["Status"]=="200 OK"):
+                        open("config.xml", "w").write(newconf.read())
+                else:
+                        __logerror("Cannot update config file.")
            
                                 
 	conf = pythonbits_config()
