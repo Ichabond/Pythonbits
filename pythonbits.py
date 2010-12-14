@@ -116,6 +116,16 @@ class pythonbits_config:
 	"""Class for holding pythonbits config strings. read() or create_dom() must be called before first use. Access strings through obj.strings[key]"""
 	def __init__(self):
 		self.strings={}
+		self.file=tempdir()+"config.xml"
+		if not os.path.exists(self.file):
+			update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
+			opener = _MyOpener()
+			nconf = opener.open(update_url)
+			if (nconf.info()["Status"]=="200 OK"):
+				open(tempdir()+"config.xml", "w").write(nconf.read())
+			else:
+				__logerror("Cannot update config file.")
+			
 		
 	def __del__(self):
 		self.file.close()
@@ -143,7 +153,6 @@ class pythonbits_config:
 			self.file = open(location, "w")
 
 	def load_strings(self):
-		self.strings={}
 		for node in self.xml.getElementsByTagName("string"):
 			self.strings[node.getAttribute("name")]=node.firstChild.data.replace('\n','').replace('\t','')
 
@@ -154,14 +163,12 @@ class pythonbits_config:
 		stringtag.appendChild(self.xml.createTextNode(data))
 		container.appendChild(stringtag)
 		self.load_strings()
-
 	def del_string(self, name):
 		del self.strings[name]
 		###Horrible hack. Write real code.
 		self.create_dom()
 		for (name, entry) in self.strings.items():
 			self.add_string(name, entry)
-
 	def create_dom(self):
 		self.xml = Document()
 		self.xml.appendChild(self.xml.createElement("pythonbits"))
@@ -609,11 +616,10 @@ if __name__ == "__main__":
 		conf.read()
 	except:
 		update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
-		del conf
 		opener = _MyOpener()
-		newconf = opener.open(update_url)
-		if (newconf.info()["Status"]=="200 OK"):
-			open(tempdir()+"config.xml", "w").write(newconf.read())
+		conf = opener.open(update_url)
+		if (conf.info()["Status"]=="200 OK"):
+			open(tempdir()+"config.xml", "w").write(conf.read())
 		else:
 			__logerror("Cannot update config file.")
 	
@@ -627,6 +633,7 @@ if __name__ == "__main__":
 		movie = imdb(results[0][1])
 		imgur = Imgur(filename)
 	else:
+		print tempdir()
 		__logerror("No films found.\n")
 		exit(1)
 	print "[b]Description:[/b]"
