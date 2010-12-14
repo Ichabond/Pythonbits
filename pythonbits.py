@@ -593,7 +593,7 @@ if __name__ == "__main__":
 	usage = "%prog [OPTION]..."
 	epilog = "Standard Operation takes the movie name and the Filename"
 	parser = OptionParser(usage=usage, epilog=epilog, version="%%prog %0.2f" % __version__)
-	parser.add_option("-u", "--update-config", action="store_true", dest="update")
+	parser.add_option("-u", "--update", action="store_true", dest="update")
 	(options, args) = parser.parse_args()
 	if(options.update):
 		try:
