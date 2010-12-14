@@ -304,8 +304,8 @@ class imdb(object):
 				overview += "\n%sLanguages:%s " % format + " | ".join(self.languages)
 			else:
 				overview += "\n%sLanguage:%s " % format + " | ".join(self.languages)
-		if self.aspectratio:
-			overview += "\n%sAspect Ratio:%s " % format + self.aspectratio
+		#if self.aspectratio:
+		#	overview += "\n%sAspect Ratio:%s " % format + self.aspectratio
 		if self.releasedate:
 			overview += "\n%sRelease Date:%s " % format + self.releasedate
 		if self.seasons:
@@ -340,10 +340,10 @@ class imdb(object):
 		self.__setitem__("shortdescription", self.shortdescription)
 
 		# plot
-		match = re.findall(conf.strings["imdb_plot_re"], page, re.MULTILINE)
-		if match:
-			self.plot = match[0]
-		self.__setitem__("plot", self.plot)
+		#match = re.findall(conf.strings["imdb_plot_re"], page, re.MULTILINE)
+		#i3f match:
+		#	self.plot = match[0]
+		#self.__setitem__("plot", self.plot)
 
 		# title
 		match = re.findall(conf.strings["imdb_title_re"], page)
@@ -362,14 +362,14 @@ class imdb(object):
 		self.__setitem__("releasedate", self.releasedate)
 
 		# keywords
-		self.plotkeywords = map(decode, re.findall(conf.strings["imdb_plotkeywords_re"],page, re.MULTILINE))
-		self.__setitem__("plotkeywords", self.plotkeywords)
+		#self.plotkeywords = map(decode, re.findall(conf.strings["imdb_plotkeywords_re"],page, re.MULTILINE))
+		#self.__setitem__("plotkeywords", self.plotkeywords)
 
 		# awards
-		match = re.findall(conf.strings["imdb_awards_re"], page, re.MULTILINE)
-		if match:
-			self.awards = decode(match[0].replace('\n',' ').strip())
-		self.__setitem__("awards", self.awards)
+		#match = re.findall(conf.strings["imdb_awards_re"], page, re.MULTILINE)
+		#if match:
+		#	self.awards = decode(match[0].replace('\n',' ').strip())
+		#self.__setitem__("awards", self.awards)
 
 		# writers
 		self.writers = map(decode, re.findall(conf.strings["imdb_writers_re"], page, re.MULTILINE))
@@ -382,14 +382,14 @@ class imdb(object):
 		self.__setitem__("rating", self.rating)
 
 		# cast
-		castsearch = re.compile(conf.strings["imdb_castsearch_re"], re.DOTALL)
-		self.cast = re.findall( castsearch, page) 
-		x = 0
-		for member in self.cast:
-			if not member[2]:
-				self.cast[x] = tuple(map(decode,member[0:2]))
-			x=x+1
-		self.__setitem__("cast", self.cast)
+		#castsearch = re.compile(conf.strings["imdb_castsearch_re"], re.DOTALL)
+		#self.cast = re.findall( castsearch, page) 
+		#x = 0
+		#for member in self.cast:
+		#	if not member[2]:
+		#		self.cast[x] = tuple(map(decode,member[0:2]))
+		#	x=x+1
+		#self.__setitem__("cast", self.cast)
 
 		# runtime
 		match = re.findall(conf.strings["imdb_runtime_re"], page, re.MULTILINE)
@@ -402,54 +402,54 @@ class imdb(object):
 		self.__setitem__("country", self.country)
 
 		# mpaa rating
-		match = map(decode, re.findall(conf.strings["imdb_mpaa_re"], page, re.MULTILINE))
-		if match:
-			self.mpaa = decode(match[0])
-		self.__setitem__("mpaa", self.mpaa)
+		#match = map(decode, re.findall(conf.strings["imdb_mpaa_re"], page, re.MULTILINE))
+		#if match:
+		#	self.mpaa = decode(match[0])
+		#self.__setitem__("mpaa", self.mpaa)
 
 		# languages
 		self.languages = map(decode, re.findall(conf.strings["imdb_languages_re"], page, re.MULTILINE))
 		self.__setitem__("languages", self.languages)
 
 		# also known as
-		match = re.findall(conf.strings["imdb_alsoknownas_re"], page, re.MULTILINE)
-		if match:
-			templist = decode(match[0]).split('<br>')
-			for i in templist:
-				if i.strip():
-					self.alsoknownas.append(i.strip())
-		self.__setitem__("alsoknownas", self.alsoknownas)
+		#match = re.findall(conf.strings["imdb_alsoknownas_re"], page, re.MULTILINE)
+		#if match:
+		#	templist = decode(match[0]).split('<br>')
+		#	for i in templist:
+		#		if i.strip():
+		#			self.alsoknownas.append(i.strip())
+		#self.__setitem__("alsoknownas", self.alsoknownas)
 			
 
 		# color
-		match = re.findall(conf.strings["imdb_color_re"], page, re.MULTILINE)
-		if match:
-			self.color = match[0]
-		self.__setitem__("color", self.color)
+		#match = re.findall(conf.strings["imdb_color_re"], page, re.MULTILINE)
+		#if match:
+		#	self.color = match[0]
+		#self.__setitem__("color", self.color)
 
 		# aspect ratio
-		match = re.findall(conf.strings["imdb_aspectratio_re"], page, re.MULTILINE)
-		if match:
-			self.aspectratio = match[0].strip()
-		self.__setitem__("aspectratio", self.aspectratio)
+		#match = re.findall(conf.strings["imdb_aspectratio_re"], page, re.MULTILINE)
+		#if match:
+		#	self.aspectratio = match[0].strip()
+		#self.__setitem__("aspectratio", self.aspectratio)
 
 		# sound mixes
-		self.soundmix = re.findall(conf.strings["imdb_soundmix_re"], page, re.MULTILINE)
-		self.__setitem__("soundmix", self.soundmix)
+		#self.soundmix = re.findall(conf.strings["imdb_soundmix_re"], page, re.MULTILINE)
+		#self.__setitem__("soundmix", self.soundmix)
 
 		# filming locations
 		self.filminglocations = map(decode, re.findall(conf.strings["imdb_filminglocations_re"],page, re.MULTILINE))
 		self.__setitem__("filminglocations", self.filminglocations)
 
 		# companies
-		self.company = map(decode, re.findall(conf.strings["imdb_company_re"], page, re.MULTILINE))
-		self.__setitem__("company", self.company)
+		#self.company = map(decode, re.findall(conf.strings["imdb_company_re"], page, re.MULTILINE))
+		#self.__setitem__("company", self.company)
 
 		# trivia
-		match = re.findall(conf.strings["imdb_trivia_re"], page, re.DOTALL)
-		if match:
-			self.trivia = decode(re.sub(conf.strings["imdb_trivia_more_re"],'', match[0], re.DOTALL).replace("\n","").strip())
-		self.__setitem__("trivia", self.trivia)
+		#match = re.findall(conf.strings["imdb_trivia_re"], page, re.DOTALL)
+		#if match:
+		#	self.trivia = decode(re.sub(conf.strings["imdb_trivia_more_re"],'', match[0], re.DOTALL).replace("\n","").strip())
+		#self.__setitem__("trivia", self.trivia)
 
 		# seasons
 		self.seasons = re.findall(conf.strings["imdb_seasons_re"], page )
@@ -588,32 +588,34 @@ if __name__ == "__main__":
 	parser = OptionParser(usage=usage, epilog=epilog, version="%%prog %0.2f" % __version__)
 	parser.add_option("-u", "--update-config", action="store_true", dest="update")
 	(options, args) = parser.parse_args()
-
-
-        if(options.update):
-                try:
-                        conf = pythonbits_config()
-                        conf.set_location("config.xml")
-                        conf.read()
-                        update_url = conf.strings["update_url"]
-                except:
-                        update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
-                del conf
-                opener = _MyOpener()
-                newconf = opener.open(update_url)
-                if (newconf.info()["Status"]=="200 OK"):
-                        open("config.xml", "w").write(newconf.read())
-                else:
-                        __logerror("Cannot update config file.")
-           
-                                
+	if(options.update):
+		try:
+			conf = pythonbits_config()
+			conf.set_location(tempdir()+"config.xml")
+			conf.read()
+			update_url = conf.strings["update_url"]
+		except:
+			update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
+			del conf
+			opener = _MyOpener()
+			newconf = opener.open(update_url)
+			if (newconf.info()["Status"]=="200 OK"):
+				open(tempdir()+"config.xml", "w").write(newconf.read())
+			else:
+				__logerror("Cannot update config file.")           
 	conf = pythonbits_config()
-	conf.set_location("config.xml")
+	conf.set_location(tempdir()+"config.xml")
 	try:
-                conf.read()
-        except:
-                __logerror("Cannot open config file")
-                exit(1)
+		conf.read()
+	except:
+		update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
+		del conf
+		opener = _MyOpener()
+		newconf = opener.open(update_url)
+		if (newconf.info()["Status"]=="200 OK"):
+			open(tempdir()+"config.xml", "w").write(newconf.read())
+		else:
+			__logerror("Cannot update config file.")
 	
 	if len(args) != 2:
 		__logerror("Not enough arguments, refer to --help for additional info")
@@ -627,12 +629,13 @@ if __name__ == "__main__":
 	else:
 		__logerror("No films found.\n")
 		exit(1)
+	print "[b]Description:[/b]"
 	if movie.getSummary():
-		print "[b]Description:[/b]"
 		print "[quote]%s[/quote]\n" % movie.summary[0]
-		print "[b]Information:[/b]"
+	print "[b]Information:[/b]"
+	print "[quote]"
 	if movie.findWiki():
-		print "[quote]Wikipedia url: %s" % movie.wikiurl
+		print "Wikipedia url: %s" % movie.wikiurl
 	if movie.findTrailer():
 		print "Trailer: %s" % movie.trailerurl
 	print movie.overview(False) + "[/quote]"
