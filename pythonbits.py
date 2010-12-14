@@ -633,7 +633,6 @@ if __name__ == "__main__":
 		movie = imdb(results[0][1])
 		imgur = Imgur(filename)
 	else:
-		print tempdir()
 		__logerror("No films found.\n")
 		exit(1)
 	print "[b]Description:[/b]"
