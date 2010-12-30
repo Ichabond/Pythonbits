@@ -44,6 +44,7 @@ import tempfile
 import os
 import base64
 import json
+import MultipartPostHandler
 from xml.dom.minidom import Document, parse
 from optparse import OptionParser, SUPPRESS_HELP
 
@@ -559,21 +560,15 @@ class Imgur(object):
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
 			exit(1)
-		screen = open(tempdir()+'screen1.png', 'rb')
-		image = screen.read()
-		screen.close()
-		imageencoded = base64.encodestring(image)
-		screen = open(tempdir()+'screen2.png', 'rb')
-		image = screen.read()
-		screen.close()
-		params  = urllib.urlencode({'key' : self.key, 'image' : imageencoded})
-		params2 = urllib.urlencode({'key' : self.key, 'image' : base64.encodestring(image)})
+		opener = urllib2.build_opener(MultipartPostHandler.MultipartPostHandler)
+		params1 = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(tempdir()+'screen1.png', "rb")})
+		params2 = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(tempdir()+'screen2.png', "rb")})
 		try:
-			socket = urllib2.urlopen("http://api.imgur.com/2/upload.json", params)
+			socket = opener.open("http://api.imgur.com/2/upload.json", params1)
 			read = json.loads(socket.read())
 			self.imageurl[0] = read['upload']['links']['original']
 			socket.close()
-			socket = urllib2.urlopen("http://api.imgur.com/2/upload.json", params2)
+			socket = opener.open("http://api.imgur.com/2/upload.json", params2)
 			read = json.loads(socket.read())
 			self.imageurl[1] = read['upload']['links']['original']
 			socket.close()
