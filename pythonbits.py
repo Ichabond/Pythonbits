@@ -572,6 +572,8 @@ class Imgur(object):
 			read = json.loads(socket.read())
 			self.imageurl[1] = read['upload']['links']['original']
 			socket.close()
+			os.remove(tempdir()+'screen1.png')
+			os.remove(tempdir()+'screen2.png')
 			return True
 		except urllib2.URLError as s:
 			if self.tries < 3:
