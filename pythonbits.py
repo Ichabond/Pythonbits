@@ -28,7 +28,8 @@
 
 """Python module to retrieve information from imdb.com and Media Info for baconbits"""
 
-__version__ = 0.2
+__version__ = (0, 2)
+__version_str__ = '.'.join(str(x) for x in __version__)
 __author__ = "Apollo"
 
 import urllib
@@ -36,7 +37,6 @@ import urllib2
 import httplib
 import mimetypes
 import urlparse
-import socket
 import sys
 import re
 import subprocess
@@ -46,7 +46,6 @@ import base64
 import json
 import MultipartPostHandler
 from xml.dom.minidom import Document, parse
-from optparse import OptionParser, SUPPRESS_HELP
 
 __htmlparser = True
 try:
@@ -583,16 +582,20 @@ class Imgur(object):
 				sys.stderr.write('\n')
 				self.upload()
 			return True
-	
+
 
 if __name__ == "__main__":
-	results = ''
-	usage = "%prog [OPTION]..."
-	epilog = "Standard Operation takes the movie name and the Filename"
-	parser = OptionParser(usage=usage, epilog=epilog, version="%%prog %0.2f" % __version__)
-	parser.add_option("-u", "--update", action="store_true", dest="update")
-	(options, args) = parser.parse_args()
-	if(options.update):
+	from optparse import OptionParser
+
+	usage = 'Usage: %prog [OPTIONS] "MOVIENAME/SERIESNAME" FILENAME'
+	parser = OptionParser(usage=usage, version="%%prog %s" % __version_str__)
+	parser.add_option("-u", "--update", action="store_true", dest="update",
+		help="update the config hints from the central github repository")
+	options, args = parser.parse_args()
+	if len(args) != 2:
+		parser.error("2 arguments expected, got %d. Use --help for additional info." % len(args))
+
+	if options.update:
 		try:
 			conf = pythonbits_config()
 			conf.set_location(tempdir()+"config.xml")
@@ -619,10 +622,6 @@ if __name__ == "__main__":
 			open(tempdir()+"config.xml", "w").write(conf.read())
 		else:
 			__logerror("Cannot update config file.")
-	
-	if len(args) != 2:
-		__logerror("Not enough arguments, refer to --help for additional info")
-		exit(1)
 
 	filename = args[1]
 	results = search(args[0]).results
@@ -648,4 +647,3 @@ if __name__ == "__main__":
 		print "\n[img=%s][/align][/quote]" % imgur.imageurl[1]
 	if movie.findMediaInfo(filename):
 		print "[mediainfo] %s [/mediainfo]" % movie.mediainfo
-	exit(0)
