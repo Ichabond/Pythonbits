@@ -120,9 +120,12 @@ class pythonbits_config:
 			opener = _MyOpener()
 			nconf = opener.open(update_url)
 			if nconf.info()["Status"]=="200 OK":
-				open(tempdir()+"config.xml", "w").write(nconf.read())
+				fh = open(tempdir()+"config.xml", "w")
+				fh.write(nconf.read())
+				fh.close()
 			else:
 				__logerror("Cannot update config file.")
+			nconf.close()
 
 
 	def __del__(self):
@@ -182,7 +185,11 @@ class search(object):
 		self.searchString = searchString
 		self.results = []
 		self.opener = _MyOpener()
-		self.feed = self.opener.open(conf.strings["google_url"] % searchString.strip().replace(" ", "+")).read()
+		quoted_query = urllib.quote_plus(searchString.strip())
+		search_url = conf.strings["google_url"] % quoted_query
+		fh = self.opener.open( search_url )
+		self.feed = fh.read()
+		fh.close()
 		templist = re.findall(conf.strings["google_imdb_result_re"], self.feed, re.DOTALL)
 		for i in templist:
 			if len(i) > 1:
@@ -468,7 +475,9 @@ class imdb(object):
 			return True
 
 		try:
-			synopsisPage = self.opener.open(self.url + "/plotsummary").read()
+			fh = self.opener.open(self.url + "/plotsummary")
+			synopsisPage = fh.read()
+			fh.close()
 		except:
 			return False
 		match = re.findall(conf.strings["imdb_summary_re"], synopsisPage, re.MULTILINE)
@@ -485,8 +494,11 @@ class imdb(object):
 
 		if not self.title:
 			return False
-		results = self.opener.open(conf.strings["google_youtube_url"] +\
-								   urllib.quote(self.title.strip().replace(" ","+"))).read()
+		quoted_query = urllib.quote_plus(self.title.strip())
+		the_url = conf.strings["google_youtube_url"] % quoted_query
+		fh = self.opener.open( the_url )
+		results = fh.read()
+		fh.close()
 		results = re.findall(conf.strings["google_youtube_result_re"], results)
 		if results:
 			for result in results:
@@ -511,25 +523,31 @@ class imdb(object):
 			if match:
 				searchstring += "+" + match[0]
 		if searchstring:
-			results = self.opener.open(conf.strings["google_wikipedia_url"] +\
-								   searchstring).read()
+			the_url = conf.strings["google_wikipedia_url"] % searchstring
+			fh = self.opener.open( the_url )
+			results = fh.read()
+			fh.close()
 			links = re.findall(conf.strings["wikipedia_url"], results)
 			if links:
 				self.wikiurl = urlparse.urljoin(links[0], urllib.quote(urlparse.urlparse(links[0]).path))
 				return True
 		return False
 
-	def findMediaInfo(self, path):
-		try:
-			if os.name=="nt":
-				##Must pass Shell=True on Windows, but this is a potential security issue
-				self.mediainfo = subprocess.Popen([r"mediainfo",path], shell=True, stdout=subprocess.PIPE).communicate()[0]
-			else:
-				self.mediainfo = subprocess.Popen([r"mediainfo",path], stdout=subprocess.PIPE).communicate()[0]
-		except OSError:
-			sys.stderr.write("Error: Media Info not installed, refer to http://mediainfo.sourceforge.net/en for installation")
-			exit(1)
-		return True
+def findMediaInfo( path ):
+	"""Returns the mediainfo text if possible, or None otherwise.
+	BE AWARE that I will sys.exit upon ``OSError``.
+	"""
+	mediainfo = None
+	try:
+		if os.name=="nt":
+			##Must pass Shell=True on Windows, but this is a potential security issue
+			mediainfo = subprocess.Popen([r"mediainfo",path], shell=True, stdout=subprocess.PIPE).communicate()[0]
+		else:
+			mediainfo = subprocess.Popen([r"mediainfo",path], stdout=subprocess.PIPE).communicate()[0]
+	except OSError:
+		sys.stderr.write("Error: Media Info not installed, refer to http://mediainfo.sourceforge.net/en for installation")
+		exit(1)
+	return mediainfo
 
 class Imgur(object):
 	def __init__(self, path):
@@ -578,6 +596,7 @@ class Imgur(object):
 				sys.stderr.write('Connection timed out, retrying to upload screenshots to imgur. This is try: ')
 				sys.stderr.write(str(self.tries))
 				sys.stderr.write('\n')
+				sys.stderr.write(str(s))
 				self.upload()
 			return True
 
@@ -605,9 +624,12 @@ if __name__ == "__main__":
 			opener = _MyOpener()
 			newconf = opener.open(update_url)
 			if newconf.info()["Status"]=="200 OK":
-				open(tempdir()+"config.xml", "w").write(newconf.read())
+				fh = open(tempdir()+"config.xml", "w")
+				fh.write(newconf.read())
+				fh.close()
 			else:
 				__logerror("Cannot update config file.")
+			newconf.close()
 	conf = pythonbits_config()
 	conf.set_location(tempdir()+"config.xml")
 	try:
@@ -615,17 +637,20 @@ if __name__ == "__main__":
 	except:
 		update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
 		opener = _MyOpener()
-		conf = opener.open(update_url)
-		if conf.info()["Status"]=="200 OK":
-			open(tempdir()+"config.xml", "w").write(conf.read())
+		conf_fh = opener.open(update_url)
+		if conf_fh.info()["Status"]=="200 OK":
+			fh = open(tempdir()+"config.xml", "w")
+			fh.write(conf_fh.read())
+			fh.close()
 		else:
 			__logerror("Cannot update config file.")
+		conf_fh.close()
 
 	filename = args[1]
 	results = search(args[0]).results
+	movie = None
 	if results:
 		movie = imdb(results[0][1])
-		imgur = Imgur(filename)
 	else:
 		__logerror("No films found.\n")
 		exit(1)
@@ -638,10 +663,13 @@ if __name__ == "__main__":
 		print "Wikipedia url: %s" % movie.wikiurl
 	if movie.findTrailer():
 		print "Trailer: %s" % movie.trailerurl
-	print movie.overview(False) + "[/quote]"
+	print movie.overview()
+	print "[/quote]"
 	print "[b]Screenshots:[/b]"
+	imgur = Imgur(filename)
 	if imgur.upload():
 		print "[quote][align=center][img=%s]" % imgur.imageurl[0]
 		print "\n[img=%s][/align][/quote]" % imgur.imageurl[1]
-	if movie.findMediaInfo(filename):
-		print "[mediainfo] %s [/mediainfo]" % movie.mediainfo
+	mediainfo = findMediaInfo(filename)
+	if mediainfo:
+		print "[mediainfo]\n%s\n[/mediainfo]" % mediainfo
