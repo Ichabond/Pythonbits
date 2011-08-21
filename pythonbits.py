@@ -119,7 +119,7 @@ class pythonbits_config:
 			update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
 			opener = _MyOpener()
 			nconf = opener.open(update_url)
-			if (nconf.info()["Status"]=="200 OK"):
+			if nconf.info()["Status"]=="200 OK":
 				open(tempdir()+"config.xml", "w").write(nconf.read())
 			else:
 				__logerror("Cannot update config file.")
@@ -129,13 +129,13 @@ class pythonbits_config:
 		self.file.close()
 
 	def read(self, file=0):
-		if(file==0):
+		if file==0:
 			file=self.file
 		self.xml = parse(file)
 		self.load_strings()
 
 	def write(self, file=0):
-		if(file==0):
+		if file==0:
 			file=self.file
 		location = self.file.name
 		file.close()
@@ -521,7 +521,7 @@ class imdb(object):
 
 	def findMediaInfo(self, path):
 		try:
-			if(os.name=="nt"):
+			if os.name=="nt":
 				##Must pass Shell=True on Windows, but this is a potential security issue
 				self.mediainfo = subprocess.Popen([r"mediainfo",path], shell=True, stdout=subprocess.PIPE).communicate()[0]
 			else:
@@ -604,7 +604,7 @@ if __name__ == "__main__":
 			del conf
 			opener = _MyOpener()
 			newconf = opener.open(update_url)
-			if (newconf.info()["Status"]=="200 OK"):
+			if newconf.info()["Status"]=="200 OK":
 				open(tempdir()+"config.xml", "w").write(newconf.read())
 			else:
 				__logerror("Cannot update config file.")
@@ -616,7 +616,7 @@ if __name__ == "__main__":
 		update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
 		opener = _MyOpener()
 		conf = opener.open(update_url)
-		if (conf.info()["Status"]=="200 OK"):
+		if conf.info()["Status"]=="200 OK":
 			open(tempdir()+"config.xml", "w").write(conf.read())
 		else:
 			__logerror("Cannot update config file.")
