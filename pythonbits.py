@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# vim:noexpandtab:
 # coding =<iso-8859-15>
 #       Copyright (c) 2010, scootypuffjr
 #       Copyright (c) 2010, Apollo
