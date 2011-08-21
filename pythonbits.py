@@ -174,7 +174,131 @@ class pythonbits_config:
 		self.xml = Document()
 		self.xml.appendChild(self.xml.createElement("pythonbits"))
 
-class search(object):
+class SearchTV(object):
+	"""Searches for the specified show name with a given season,show tuple.
+	"""
+	def __init__(self, searchString, episode_tuple):
+		"""
+		Searches for the provided show name and the given episode information.
+		:param searchString: the show name to search for
+		:param episode_tuple: the (season, show-number) tuple of that show
+		"""
+		try:
+			template = conf.strings['tvrage_quickinfo'].strip()
+		except KeyError, ke:
+			print >> sys.stderr, "Unable to look up the quickinfo template", ke
+			print >> sys.stderr, "Keys: ", conf.strings.keys()
+			raise
+		# no matter how they presented it, we want it in SxE format
+		episode_cross = '%sx%s' % episode_tuple
+		quoted_search = urllib.quote( searchString )
+		search_url = template % {'query':quoted_search,'episode_cross':episode_cross}
+		# print "SearchURL=", search_url
+		opener = _MyOpener()
+		fh = opener.open( search_url )
+		info = fh.read()
+		# they return a leading <pre> as part of their "API"; great
+		info = re.sub(r'^\s*<pre>', '', info)
+		# print "Info <<<",info,">>>"
+		fh.close()
+		self.result = self._parse_tvrage_quickinfo( info )
+
+	def _parse_tvrage_quickinfo(self, info ):
+		"""
+		As per the documentation found at <http://www.tvrage.com/info/quickinfo.html>
+
+
+		[An Example]
+Show ID@27924
+Show Name@The Franchise: A Season with the San Francisco Giants
+Show URL@http://www.tvrage.com/The_Franchise-A_Season_with_the_San_Fran
+Premiered@2011
+Started@Apr/13/2011
+Ended@
+Episode Info@01x03^Season 1, Episode 3^27/Jul/2011
+Episode URL@http://www.tvrage.com/The_Franchise-A_Season_with_the_San_Fran/episodes/1065050931
+Latest Episode@01x06^Season 1, Episode 6^Aug/17/2011
+Next Episode@01x07^Season 1, Episode 7^Aug/24/2011
+RFC3339@2011-08-24T22:00:00-4:00
+GMT+0 NODST@1314230400
+Country@USA
+Status@New Series
+Classification@Reality
+Genres@Action | Celebrities | Family | Fitness | Lifestyle | Sports | Talent
+Network@Showtime
+Airtime@Wednesday at 10:00 pm
+Runtime@30
+		"""
+		results = {}
+		# these are fields which are further subdelimited by "^" markers
+		special_fields = ['Episode Info', 'Latest Episode', 'Next Episode']
+		special_subfields = {
+			'Episode Info':['Episode Tuple','Episode Description','Air Date'],
+			'Latest Episode':[
+				'Latest Episode Tuple','Latest Episode Description','Latest Air Date'],
+			'Next Episode':[
+				'Next Episode Tuple','Next Episode Description','Next Air Date']
+		}
+		# these are fields which contain mmm/dd/yyyy formatted dates
+		date_fields = ['Started', 'Ended']
+		lines = re.split(r'[\r\n]', info)
+		for line in lines:
+			if not len(line):
+				continue
+			key_value = re.split(r'@', line)
+			kv_len = len(key_value)
+			if 2 != kv_len:
+				raise ValueError("Expected 2 fields but found %d in %s" \
+						% (kv_len, line))
+			( field_name, value ) = key_value
+			if field_name in special_fields and len(value) > 0:
+				values = re.split(r'\^', value)
+				# hang on to this because we are going to delete the field_name
+				# variable as part of our work
+				outer_fieldname = field_name
+				for i in xrange(0, len(values)):
+					field_name = special_subfields[ outer_fieldname ][i]
+					v = values[i]
+					rage_date = self._parse_tvrage_date( v )
+					if rage_date:
+						# convert them to a more standardized layout
+						# it isn't ISO8901 but is more widely accepted
+						v = self._render_tvrage_date( rage_date )
+					results[ field_name ] = v
+					# signal that we have already stored the field_name
+					field_name = None
+			elif field_name in date_fields and len(value) > 0:
+				dt = self._parse_tvrage_date( value )
+				if dt:
+					value = self._render_tvrage_date( dt )
+			if field_name:
+				results[ field_name ] = value
+		return results
+	def _render_tvrage_date(self, rage_date):
+		"""
+		:param rage_date: the map containing ``mmm``,``dd``,``yyyy`` keys
+		:returns: a string in a nice format
+		"""
+		return "%s %s %s" % \
+			   (rage_date['dd'], rage_date['mmm'], rage_date['yyyy'])
+
+	def _parse_tvrage_date(self, date_str):
+		"""
+		Tries to parse the given ``date_str`` as a TV-Rage formatted
+		date (mmm/dd/yyyy).
+		:param date_str: the string that might be in the TV-Rage format
+		:returns: a map with keys ``mmm``,``dd``,``yyyy`` or None
+		"""
+		DATE_RE = re.compile(r'(...)/(\d\d)/(\d{4})')
+		ma = DATE_RE.match( date_str )
+		if not ma:
+			return None
+		result = {'mmm':ma.group(1),
+				'dd':ma.group(2),
+				'yyyy':ma.group(3)}
+		return result
+
+class SearchMovie(object):
 
 	"""Takes a search string as an argument. Uses google's site search feature.
 	It save's the results as a list of tuples of title and url.
@@ -606,12 +730,29 @@ if __name__ == "__main__":
 
 	usage = 'Usage: %prog [OPTIONS] "MOVIENAME/SERIESNAME" FILENAME'
 	parser = OptionParser(usage=usage, version="%%prog %s" % __version_str__)
+	parser.add_option("-e", "--episode", type="string", action="store", dest="tv_episode",
+		help="Provides the TV episode identifier (1x2 or S01E02)")
 	parser.add_option("-u", "--update", action="store_true", dest="update",
 		help="update the config hints from the central github repository")
 	options, args = parser.parse_args()
 	if len(args) != 2:
 		parser.error("2 arguments expected, got %d. Use --help for additional info." % len(args))
 
+	tv_episode = None
+	if options.tv_episode:
+		matchers = [
+				re.compile(r'(\d+)x(\d+)'),
+				re.compile(r'(?i)s(\d+)e(\d+)')
+				]
+		for matcher in matchers:
+			ma = matcher.match(options.tv_episode)
+			if ma:
+				tv_episode = ( int(ma.group(1)), int(ma.group(2)) )
+				break
+		if not tv_episode:
+			print >> sys.stderr, \
+				"Unable to decipher your tv-episode \"%s\"" % options.tv_episode
+		# print "TV-Episode: %s" % str(tv_episode)
 	if options.update:
 		try:
 			conf = pythonbits_config()
@@ -646,24 +787,51 @@ if __name__ == "__main__":
 			__logerror("Cannot update config file.")
 		conf_fh.close()
 
+	search_string = args[0]
 	filename = args[1]
-	results = search(args[0]).results
+
 	movie = None
-	if results:
-		movie = imdb(results[0][1])
+	if tv_episode:
+		results = SearchTV(search_string, tv_episode).result
 	else:
-		__logerror("No films found.\n")
-		exit(1)
+		results = SearchMovie(search_string).results
+		if results:
+			movie = imdb(results[0][1])
+		else:
+			__logerror("No films found.\n")
+			exit(1)
 	print "[b]Description:[/b]"
-	if movie.getSummary():
+	if movie and movie.getSummary():
 		print "[quote]%s[/quote]\n" % movie.summary[0]
 	print "[b]Information:[/b]"
 	print "[quote]"
-	if movie.findWiki():
-		print "Wikipedia url: %s" % movie.wikiurl
-	if movie.findTrailer():
-		print "Trailer: %s" % movie.trailerurl
-	print movie.overview()
+	if movie:
+		if movie.findWiki():
+			print "Wikipedia url: %s" % movie.wikiurl
+		if movie.findTrailer():
+			print "Trailer: %s" % movie.trailerurl
+		print movie.overview()
+	elif tv_episode:
+		interesting_fields = [
+			'Classification',
+			'Country',
+			'Ended',
+			'Episode URL',
+			'Genres',
+			'Network',
+			'Premiered',
+			'Runtime',
+			'Episode Description',
+			'Show Name',
+			'Show URL',
+			'Started',
+			'Status'
+		]
+		for field_name in interesting_fields:
+			if not field_name in results:
+				continue
+			v = results[ field_name ]
+			print "[b]%s[/b]: %s" % (field_name, v)
 	print "[/quote]"
 	print "[b]Screenshots:[/b]"
 	imgur = Imgur(filename)

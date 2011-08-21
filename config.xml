@@ -108,4 +108,7 @@
 	<string name="google_youtube_result_re">
 		&lt;a href=&quot;(http://www.youtube.com/watch\?v=[\w\d]+)&quot; class=l&gt;(.*?)(?=&lt;/a&gt;)
 	</string>
+    <string name="tvrage_quickinfo">
+        http://services.tvrage.com/tools/quickinfo.php?show=%(query)s&amp;ep=%(episode_cross)s
+    </string>
 </pythonbits>
