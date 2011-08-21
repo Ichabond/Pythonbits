@@ -43,7 +43,7 @@
 		&lt;h\d&gt;&lt;a href=&quot;/mpaa&quot;&gt;MPAA&lt;/a&gt;:&lt;/h\d&gt;\n?&lt;div class=&quot;info-content&quot;&gt;\n*([^&lt;\n]+)
 	</string>
 	<string name="google_youtube_url">
-		http://www.google.com/search?q=site%3Ayoutube.com+
+		http://www.google.com/search?q=site%%3Ayoutube.com+%s
 	</string>
 	<string name="wikipedia_url">
 		http://en.wikipedia.org/wiki/[^&quot;]+
@@ -52,7 +52,7 @@
 		Trailer
 	</string>
 	<string name="google_wikipedia_url">
-		http://www.google.com/search?q=site%3Awikipedia.org+
+		http://www.google.com/search?q=site%%3Awikipedia.org+%s
 	</string>
 	<string name="imdb_soundmix_re">
 		&lt;a href=&quot;/List\?sound-mix[^&gt;]+&gt;\n*([^&lt;\n]+)
