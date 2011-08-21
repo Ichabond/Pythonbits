@@ -35,15 +35,12 @@ __author__ = "Apollo"
 
 import urllib
 import urllib2
-import httplib
-import mimetypes
 import urlparse
 import sys
 import re
 import subprocess
 import tempfile
 import os
-import base64
 import json
 import MultipartPostHandler
 from xml.dom.minidom import Document, parse
