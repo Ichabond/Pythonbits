@@ -61,7 +61,7 @@ if __htmlparser:
 	__converter = HTMLParser()
 
 def tempdir():
-    return tempfile.gettempdir()+os.sep
+	return tempfile.gettempdir()+os.sep
 
 def decode(text):
 
