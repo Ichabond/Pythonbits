@@ -7,7 +7,12 @@ It is suggested to create a directory for user-made scripts in your home directo
 
 Section 1.2 Usage
 -----------------
-Usage: pythonbits.py "MOVIENAME/SERIESNAME" moviefile > Textfile
+Usage:
+  ``pythonbits.py "MOVIENAME/SERIESNAME" moviefile > Textfile``
+*OR*
+  ``pythonbits.py -e 1x5 "TV show name" tv-show-file > Textfile``
+*OR*
+  ``pythonbits.py -e s01e05 "TV show name" tv-show-file > Textfile``
 
 Section 1.3 Clarification
 -------------------------
