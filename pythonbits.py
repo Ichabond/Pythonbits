@@ -714,7 +714,7 @@ class Imgur(object):
 			os.remove(tempdir()+'screen1.png')
 			os.remove(tempdir()+'screen2.png')
 			return True
-		except urllib2.URLError as s:
+		except urllib2.URLError, s:
 			if self.tries < 3:
 				self.tries += 1
 				sys.stderr.write('Connection timed out, retrying to upload screenshots to imgur. This is try: ')
