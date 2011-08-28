@@ -108,7 +108,11 @@ class Error404(Exception):
 		return repr(self.parameter)
 
 class _MyOpener(urllib.FancyURLopener):
-		version = 'Opera/9.80 (fX11; Linux i686; U; en) Presto/2.2.15 Version/10.00'
+	version = 'Opera/9.80 (fX11; Linux i686; U; en) Presto/2.2.15 Version/10.00'
+	def __init__(self, *args, **kwargs):
+		urllib.FancyURLopener.__init__(self, *args, **kwargs)
+		# force the results into English even if the GeoIP says otherwise
+		self.addheader('Accept-Language','en-us, en')
 
 class PythonbitsConfig:
 	"""Class for holding pythonbits config strings. read() or create_dom() must be called before first use. Access strings through obj.strings[key]"""
