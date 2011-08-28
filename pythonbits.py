@@ -395,7 +395,11 @@ class SearchImdb(object):
 		except:
 			raise FetchError("Error connecting to IMDB")
 
-		if self.feed.getcode() != 404:
+		code = None
+		if hasattr(self.feed, 'getcode'):
+			# python 2.5 does not have getcode
+			code = self.feed.getcode()
+		if not code or code != 404:
 			self.feed = self.feed.read()
 		else:
 			raise Error404("IMDB returned 404")
