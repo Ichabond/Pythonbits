@@ -40,6 +40,7 @@ import sys
 import re
 import subprocess
 import tempfile
+import microdata
 import os
 import json
 import MultipartPostHandler
@@ -378,7 +379,7 @@ class SearchImdb(object):
 		self.soundmix = []
 		self.filminglocations = []
 		self.company = []
-		self.summary = ''
+		self.summary = []
 		self.trailerurl = ''
 		self.wikiurl = ''
 		self.mediainfo = ''
@@ -467,138 +468,45 @@ class SearchImdb(object):
 
 		"""Scrapes html from IMDB for information."""
 
-		# director
-		self.director = re.findall(conf.strings["imdb_director_re"], page, re.MULTILINE)
-		self.__setitem__("director", self.director)
+		mdata = microdata.extract( page )
+		if not mdata:
+			raise ValueError("Unable to find any microdata in IMDB result")
+		mitem = mdata[0]
 
-		# tagline
-		match = re.findall(conf.strings["imdb_tagline_re"], page, re.DOTALL)
-		if match:
-			self.tagline = decode(match[0])
-		self.__setitem__("tagline", self.tagline)
+		if 'http://schema.org/Movie/actors' in mitem:
+			_cast = mitem['http://schema.org/Movie/actors']
+			self.cast = re.split(r',', _cast)
+		if 'http://schema.org/Movie/datePublished' in mitem:
+			self.releasedate = mitem['http://schema.org/Movie/datePublished']
+		if 'http://schema.org/Movie/description' in mitem:
+			self.shortdescription = mitem['http://schema.org/Movie/description']
+		if 'http://schema.org/Movie/director' in mitem:
+			_dir = mitem['http://schema.org/Movie/director']
+			self.director = re.split(r',', _dir)
+		if 'http://schema.org/Movie/duration' in mitem:
+			self.runtime = mitem['http://schema.org/Movie/duration']
+		if 'http://schema.org/Movie/genre' in mitem:
+			_genre = mitem['http://schema.org/Movie/genre']
+			self.genre = re.split(r',', _genre)
+		if 'http://schema.org/Movie/name' in mitem:
+			self.title = mitem['http://schema.org/Movie/name']
 
-		# short description
-		match = re.findall(conf.strings["imdb_description_re"], page,re.MULTILINE)
-		if match:
-			self.shortdescription = decode(match[0])
-		self.__setitem__("shortdescription", self.shortdescription)
-
-		# plot
-		#match = re.findall(conf.strings["imdb_plot_re"], page, re.MULTILINE)
-		#i3f match:
-		#	self.plot = match[0]
-		#self.__setitem__("plot", self.plot)
-
-		# title
-		match = re.findall(conf.strings["imdb_title_re"], page)
-		if match:
-			self.title = decode(match[0].strip())
-		self.__setitem__("title", self.title)
-
-		# genre
-		self.genre = re.findall(conf.strings["imdb_genre_re"], page, re.MULTILINE)
-		self.__setitem__("genre", self.genre)
-
-		# release date
-		match = re.findall(conf.strings["imdb_releasedate_re"], page, re.MULTILINE)
-		if match:
-			self.releasedate = match[0]
-		self.__setitem__("releasedate", self.releasedate)
-
-		# keywords
-		#self.plotkeywords = map(decode, re.findall(conf.strings["imdb_plotkeywords_re"],page, re.MULTILINE))
-		#self.__setitem__("plotkeywords", self.plotkeywords)
-
-		# awards
-		#match = re.findall(conf.strings["imdb_awards_re"], page, re.MULTILINE)
-		#if match:
-		#	self.awards = decode(match[0].replace('\n',' ').strip())
-		#self.__setitem__("awards", self.awards)
-
-		# writers
-		self.writers = map(decode, re.findall(conf.strings["imdb_writers_re"], page, re.MULTILINE))
-		self.__setitem__("writers", self.writers)
-
-		# rating
-		match = re.findall(conf.strings["imdb_rating_re"], page, re.MULTILINE)
-		if match:
-			self.rating = match[0]
-		self.__setitem__("rating", self.rating)
-
-		# cast
-		#castsearch = re.compile(conf.strings["imdb_castsearch_re"], re.DOTALL)
-		#self.cast = re.findall( castsearch, page)
-		#x = 0
-		#for member in self.cast:
-		#	if not member[2]:
-		#		self.cast[x] = tuple(map(decode,member[0:2]))
-		#	x=x+1
-		#self.__setitem__("cast", self.cast)
-
-		# runtime
-		match = re.findall(conf.strings["imdb_runtime_re"], page, re.MULTILINE)
-		if match:
-			self.runtime = decode(match[0].strip())
-		self.__setitem__("runtime", self.runtime)
-
-		# countries
-		self.country = map(decode, re.findall(conf.strings["imdb_country_re"], page, re.MULTILINE))
-		self.__setitem__("country", self.country)
-
-		# mpaa rating
-		#match = map(decode, re.findall(conf.strings["imdb_mpaa_re"], page, re.MULTILINE))
-		#if match:
-		#	self.mpaa = decode(match[0])
-		#self.__setitem__("mpaa", self.mpaa)
-
-		# languages
-		self.languages = map(decode, re.findall(conf.strings["imdb_languages_re"], page, re.MULTILINE))
-		self.__setitem__("languages", self.languages)
-
-		# also known as
-		#match = re.findall(conf.strings["imdb_alsoknownas_re"], page, re.MULTILINE)
-		#if match:
-		#	templist = decode(match[0]).split('<br>')
-		#	for i in templist:
-		#		if i.strip():
-		#			self.alsoknownas.append(i.strip())
-		#self.__setitem__("alsoknownas", self.alsoknownas)
-
-
-		# color
-		#match = re.findall(conf.strings["imdb_color_re"], page, re.MULTILINE)
-		#if match:
-		#	self.color = match[0]
-		#self.__setitem__("color", self.color)
-
-		# aspect ratio
-		#match = re.findall(conf.strings["imdb_aspectratio_re"], page, re.MULTILINE)
-		#if match:
-		#	self.aspectratio = match[0].strip()
-		#self.__setitem__("aspectratio", self.aspectratio)
-
-		# sound mixes
-		#self.soundmix = re.findall(conf.strings["imdb_soundmix_re"], page, re.MULTILINE)
-		#self.__setitem__("soundmix", self.soundmix)
-
-		# filming locations
-		self.filminglocations = map(decode, re.findall(conf.strings["imdb_filminglocations_re"],page, re.MULTILINE))
-		self.__setitem__("filminglocations", self.filminglocations)
-
-		# companies
-		#self.company = map(decode, re.findall(conf.strings["imdb_company_re"], page, re.MULTILINE))
-		#self.__setitem__("company", self.company)
-
-		# trivia
-		#match = re.findall(conf.strings["imdb_trivia_re"], page, re.DOTALL)
-		#if match:
-		#	self.trivia = decode(re.sub(conf.strings["imdb_trivia_more_re"],'', match[0], re.DOTALL).replace("\n","").strip())
-		#self.__setitem__("trivia", self.trivia)
-
-		# seasons
-		self.seasons = re.findall(conf.strings["imdb_seasons_re"], page )
-		self.__setitem__("seasons", self.seasons)
-
+		AGG_RATE_VALUE = 'http://schema.org/AggregateRating/ratingValue'
+		aggRates = []
+		if 'children' in mitem:
+			aggRates = [x for x in mitem['children'] \
+					if AGG_RATE_VALUE in x.keys() ]
+		if aggRates:
+			aggRate = aggRates[0]
+			rateValue = aggRate[ AGG_RATE_VALUE ]
+			rateTotal = None
+			if 'http://schema.org/AggregateRating/bestRating' in aggRate:
+				rateTotal = aggRate[
+						'http://schema.org/AggregateRating/bestRating' ]
+			if rateTotal:
+				self.rating = '%s / %s' % ( rateValue, rateTotal )
+			else:
+				self.rating = rateValue
 
 	def getSummary(self):
 
