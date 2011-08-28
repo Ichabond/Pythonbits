@@ -43,7 +43,7 @@
 		&lt;h\d&gt;&lt;a href=&quot;/mpaa&quot;&gt;MPAA&lt;/a&gt;:&lt;/h\d&gt;\n?&lt;div class=&quot;info-content&quot;&gt;\n*([^&lt;\n]+)
 	</string>
 	<string name="google_youtube_url">
-		http://www.google.com/search?q=site%%3Ayoutube.com+%s
+		http://www.google.com/search?hl=en&amp;q=site%%3Ayoutube.com+%s
 	</string>
 	<string name="wikipedia_url">
 		http://en.wikipedia.org/wiki/[^&quot;]+
@@ -52,7 +52,7 @@
 		Trailer
 	</string>
 	<string name="google_wikipedia_url">
-		http://www.google.com/search?q=site%%3Awikipedia.org+%s
+		http://www.google.com/search?hl=en&amp;q=site%%3Awikipedia.org+%s
 	</string>
 	<string name="imdb_soundmix_re">
 		&lt;a href=&quot;/List\?sound-mix[^&gt;]+&gt;\n*([^&lt;\n]+)
@@ -67,7 +67,7 @@
 		name/nm\d+/.*?&gt;([^&lt;]+)&lt;/a&gt;&lt;/td&gt;&lt;td class=&quot;\w{3}&quot;&gt;(?: ... )?&lt;/td&gt;&lt;td class=&quot;char&quot;&gt;(?:&lt;a href=(?:'|&quot;)/character/ch\d+/(?:'|&quot;)&gt;)?([^&lt;]+)&lt;[^&gt;]+&gt;(?: / (?:&lt;a href=&quot;/character/ch\d+/&quot;&gt;)?([^&lt;]+)&lt;)?
 	</string>
 	<string name="google_url">
-		http://www.google.com/search?q=%s+site%%3Aimdb.com
+		http://www.google.com/search?hl=en&amp;q=%s+site%%3Aimdb.com
 	</string>
 	<string name="imdb_tagline_re">
 		&lt;h\d&gt;Tagline:&lt;/h\d&gt;\n*&lt;div class=&quot;info-content&quot;&gt;\n*(.*?)\n*(?:&lt;/div&gt;|&lt;a)
