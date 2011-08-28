@@ -110,7 +110,7 @@ class Error404(Exception):
 class _MyOpener(urllib.FancyURLopener):
 		version = 'Opera/9.80 (fX11; Linux i686; U; en) Presto/2.2.15 Version/10.00'
 
-class pythonbits_config:
+class PythonbitsConfig:
 	"""Class for holding pythonbits config strings. read() or create_dom() must be called before first use. Access strings through obj.strings[key]"""
 	def __init__(self):
 		self.strings={}
@@ -340,7 +340,7 @@ class SearchMovie(object):
 	def reverse(self):
 		self.results.reverse()
 
-class imdb(object):
+class SearchImdb(object):
 
 	"""Takes an imdb url as a parameter and returns an object with attributes scraped
 	from the imdb page.
@@ -755,7 +755,7 @@ if __name__ == "__main__":
 		# print "TV-Episode: %s" % str(tv_episode)
 	if options.update:
 		try:
-			conf = pythonbits_config()
+			conf = PythonbitsConfig()
 			conf.set_location(tempdir()+"config.xml")
 			conf.read()
 			update_url = conf.strings["update_url"]
@@ -771,7 +771,7 @@ if __name__ == "__main__":
 			else:
 				__logerror("Cannot update config file.")
 			newconf.close()
-	conf = pythonbits_config()
+	conf = PythonbitsConfig()
 	conf.set_location(tempdir()+"config.xml")
 	try:
 		conf.read()
@@ -796,7 +796,7 @@ if __name__ == "__main__":
 	else:
 		results = SearchMovie(search_string).results
 		if results:
-			movie = imdb(results[0][1])
+			movie = SearchImdb(results[0][1])
 		else:
 			__logerror("No films found.\n")
 			exit(1)
