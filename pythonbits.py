@@ -119,7 +119,7 @@ class PythonbitsConfig:
 	"""Class for holding pythonbits config strings. read() or create_dom() must be called before first use. Access strings through obj.strings[key]"""
 	def __init__(self):
 		self.strings={}
-		self.file="config.xml"
+		self.file=tempdir()+"config.xml"
 		if not os.path.exists(self.file):
 			update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
 			opener = _MyOpener()
