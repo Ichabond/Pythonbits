@@ -536,7 +536,7 @@ class SearchImdb(object):
 		if not self.title:
 			return False
 		quoted_query = urllib.quote_plus(self.title.strip())
-		the_url = conf.strings["google_youtube_url"] + quoted_query
+		the_url = conf.strings["google_youtube_url"] % quoted_query
 		fh = self.opener.open( the_url )
 		results = fh.read()
 		fh.close()
@@ -564,7 +564,7 @@ class SearchImdb(object):
 			if match:
 				searchstring += "+" + match[0]
 		if searchstring:
-			the_url = conf.strings["google_wikipedia_url"] + searchstring
+			the_url = conf.strings["google_wikipedia_url"] % searchstring
 			fh = self.opener.open( the_url )
 			results = fh.read()
 			fh.close()
