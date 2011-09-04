@@ -652,6 +652,19 @@ class Imgur(object):
 				self.upload()
 			return True
 
+def updateConfig():
+	update_url = "https://raw.github.com/Ichabond/Pythonbits/master/config.xml"
+	opener = _MyOpener()
+	newconf = opener.open(update_url)
+	if newconf.info()["Status"]=="200 OK":
+		fh = open(tempdir()+"config.xml", "w")
+		fh.write(newconf.read())
+		fh.close()
+		print "Config file succesfully updated"
+	else:
+		__logerror("Cannot update config file.")
+	newconf.close()
+	os.chmod(tempdir()+"config.xml", 0777)
 
 if __name__ == "__main__":
 	from optparse import OptionParser
@@ -664,8 +677,6 @@ if __name__ == "__main__":
 		help="update the config hints from the central github repository")
 	parser.add_option("-s", "--screenshots", type="int", action="store", dest="screenshots", help="Set the amount of screenshots, max 7")
 	options, args = parser.parse_args()
-	if len(args) != 2:
-		parser.error("2 arguments expected, got %d. Use --help for additional info." % len(args))
 
 	tv_episode = None
 	if options.tv_episode:
@@ -683,38 +694,15 @@ if __name__ == "__main__":
 				"Unable to decipher your tv-episode \"%s\"" % options.tv_episode
 		# print "TV-Episode: %s" % str(tv_episode)
 	if options.update:
-		try:
-			conf = PythonbitsConfig()
-			conf.set_location(tempdir()+"config.xml")
-			conf.read()
-			update_url = conf.strings["update_url"]
-		except:
-			update_url = "https://raw.github.com/extravagant/Pythonbits/master/config.xml"
-			del conf
-			opener = _MyOpener()
-			newconf = opener.open(update_url)
-			if newconf.info()["Status"]=="200 OK":
-				fh = open(tempdir()+"config.xml", "w")
-				fh.write(newconf.read())
-				fh.close()
-			else:
-				__logerror("Cannot update config file.")
-			newconf.close()
+		print "Updating Configfile"
+		updateConfig()
+		sys.exit(0)
 	conf = PythonbitsConfig()
 	conf.set_location(tempdir()+"config.xml")
 	try:
 		conf.read()
 	except:
-		update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
-		opener = _MyOpener()
-		conf_fh = opener.open(update_url)
-		if conf_fh.info()["Status"]=="200 OK":
-			fh = open(tempdir()+"config.xml", "w")
-			fh.write(conf_fh.read())
-			fh.close()
-		else:
-			__logerror("Cannot update config file.")
-		conf_fh.close()
+		updateConfig()
 
 	search_string = args[0]
 	filename = args[1]
