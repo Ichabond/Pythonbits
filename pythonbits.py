@@ -193,6 +193,7 @@ class SearchTV(object):
 		except KeyError, ke:
 			print >> sys.stderr, "Unable to look up the quickinfo template", ke
 			print >> sys.stderr, "Keys: ", conf.strings.keys()
+			print >> sys.stderr, "XML location", tempdir()
 			raise
 		# no matter how they presented it, we want it in SxE format
 		episode_cross = '%sx%s' % episode_tuple
@@ -590,13 +591,22 @@ def findMediaInfo( path ):
 	return mediainfo
 
 class Imgur(object):
-	def __init__(self, path):
+	def __init__(self, path, shots = 2):
 		self.path = path
-		self.imageurl = ['', '']
+		self.imageurl = []
 		self.key = conf.strings["imgur_key"]
 		self.tries = 0
 		self.duration = ''
 		self.ffmpeg = ''
+		if shots < 2:
+			self.shots = 2
+			sys.stderr.write('Number of screenshots increased to 2\n')
+		elif shots > 7:
+			self.shots = 7
+			sys.stderr.write('Number of screenshots limited to 7\n')
+		else:
+			self.shots = shots
+        
 
 	def getDuration(self):
 		try:
@@ -609,26 +619,28 @@ class Imgur(object):
 
 	def upload(self):
 		self.getDuration()
+		# Take screenshots at even increments between 20% and 80% of the duration
+		stops = range(20,81,60/(self.shots-1))
 		try:
-			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 2)/10), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen1.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
-			subprocess.Popen([r"ffmpeg","-ss",str((self.duration * 8)/10), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", tempdir()+"screen2.png" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
+			count=0
+			imgs = [ ]
+			for stop in stops:
+				imgs.append(tempdir()+"screen%d.png" % count)
+				subprocess.Popen([r"ffmpeg","-ss",str((self.duration * stop)/100), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", imgs[-1] ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
+				count+=1
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
 			exit(1)
 		opener = urllib2.build_opener(MultipartPostHandler.MultipartPostHandler)
-		params1 = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(tempdir()+'screen1.png', "rb")})
-		params2 = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(tempdir()+'screen2.png', "rb")})
+		
 		try:
-			socket = opener.open("http://api.imgur.com/2/upload.json", params1)
-			read = json.loads(socket.read())
-			self.imageurl[0] = read['upload']['links']['original']
-			socket.close()
-			socket = opener.open("http://api.imgur.com/2/upload.json", params2)
-			read = json.loads(socket.read())
-			self.imageurl[1] = read['upload']['links']['original']
-			socket.close()
-			os.remove(tempdir()+'screen1.png')
-			os.remove(tempdir()+'screen2.png')
+			for img in imgs:
+				params = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(img, "rb")})
+				socket = opener.open("http://api.imgur.com/2/upload.json", params)
+				read = json.loads(socket.read())
+				self.imageurl.append(read['upload']['links']['original'])
+				socket.close()
+				os.remove(img)
 			return True
 		except urllib2.URLError, s:
 			if self.tries < 3:
@@ -640,6 +652,19 @@ class Imgur(object):
 				self.upload()
 			return True
 
+def updateConfig():
+	update_url = "https://raw.github.com/Ichabond/Pythonbits/master/config.xml"
+	opener = _MyOpener()
+	newconf = opener.open(update_url)
+	if newconf.info()["Status"]=="200 OK":
+		fh = open(tempdir()+"config.xml", "w")
+		fh.write(newconf.read())
+		fh.close()
+		print "Config file succesfully updated"
+	else:
+		__logerror("Cannot update config file.")
+	newconf.close()
+	os.chmod(tempdir()+"config.xml", 0777)
 
 if __name__ == "__main__":
 	from optparse import OptionParser
@@ -650,9 +675,8 @@ if __name__ == "__main__":
 		help="Provides the TV episode identifier (1x2 or S01E02)")
 	parser.add_option("-u", "--update", action="store_true", dest="update",
 		help="update the config hints from the central github repository")
+	parser.add_option("-s", "--screenshots", type="int", action="store", dest="screenshots", help="Set the amount of screenshots, max 7")
 	options, args = parser.parse_args()
-	if len(args) != 2:
-		parser.error("2 arguments expected, got %d. Use --help for additional info." % len(args))
 
 	tv_episode = None
 	if options.tv_episode:
@@ -670,38 +694,15 @@ if __name__ == "__main__":
 				"Unable to decipher your tv-episode \"%s\"" % options.tv_episode
 		# print "TV-Episode: %s" % str(tv_episode)
 	if options.update:
-		try:
-			conf = PythonbitsConfig()
-			conf.set_location(tempdir()+"config.xml")
-			conf.read()
-			update_url = conf.strings["update_url"]
-		except:
-			update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
-			del conf
-			opener = _MyOpener()
-			newconf = opener.open(update_url)
-			if newconf.info()["Status"]=="200 OK":
-				fh = open(tempdir()+"config.xml", "w")
-				fh.write(newconf.read())
-				fh.close()
-			else:
-				__logerror("Cannot update config file.")
-			newconf.close()
+		print "Updating Configfile"
+		updateConfig()
+		sys.exit(0)
 	conf = PythonbitsConfig()
 	conf.set_location(tempdir()+"config.xml")
 	try:
 		conf.read()
 	except:
-		update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
-		opener = _MyOpener()
-		conf_fh = opener.open(update_url)
-		if conf_fh.info()["Status"]=="200 OK":
-			fh = open(tempdir()+"config.xml", "w")
-			fh.write(conf_fh.read())
-			fh.close()
-		else:
-			__logerror("Cannot update config file.")
-		conf_fh.close()
+		updateConfig()
 
 	search_string = args[0]
 	filename = args[1]
@@ -716,8 +717,8 @@ if __name__ == "__main__":
 		else:
 			__logerror("No films found.\n")
 			exit(1)
-	print "[b]Description:[/b]"
 	if movie and movie.getSummary():
+		print "[b]Description:[/b]"
 		print "[quote]%s[/quote]\n" % movie.summary[0]
 	print "[b]Information:[/b]"
 	print "[quote]"
@@ -750,10 +751,15 @@ if __name__ == "__main__":
 			print "[b]%s[/b]: %s" % (field_name, v)
 	print "[/quote]"
 	print "[b]Screenshots:[/b]"
-	imgur = Imgur(filename)
+	if options.screenshots:
+		imgur = Imgur(filename,int(options.screenshots))
+	else:
+		imgur = Imgur(filename)
 	if imgur.upload():
-		print "[quote][align=center][img=%s]" % imgur.imageurl[0]
-		print "\n[img=%s][/align][/quote]" % imgur.imageurl[1]
+		print "[quote][align=center]" 
+		for url in imgur.imageurl:
+			print "[img=%s]" % url
+		print "[/align][/quote]"
 	mediainfo = findMediaInfo(filename)
 	if mediainfo:
 		print "[mediainfo]\n%s\n[/mediainfo]" % mediainfo

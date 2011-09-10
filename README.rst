@@ -2,7 +2,7 @@ Chapter 1 How-To
 ================
 Section 1.1 Installation
 ------------------------
-Download the latest version from the git repository. Drop the 2 files (``pythonbits.py`` and ``MultipartPostHandler.py``) in a folder inside your shellpath.
+Download the latest version from the git repository. Drop the 4 files (``pythonbits.py``, ``MultipartPostHandler.py``, ``microdata.py`` and ``BeautifulSoup.py``) in a folder inside your shellpath, or run the provided ``install.sh`` script, which will install the appropriate binaries in ``/usr/local/bin``.
 It is suggested to create a directory for user-made scripts in your home directory. We will not go into this in this document.
 
 Section 1.2 Usage
