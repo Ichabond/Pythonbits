@@ -45,6 +45,7 @@ import os
 import json
 import MultipartPostHandler
 from xml.dom.minidom import Document, parse
+from hashlib import md5 # for user error feedback reports
 
 __converter = None
 try:
@@ -598,7 +599,7 @@ class Imgur(object):
 		self.imageurl = []
 		self.key = conf.strings["imgur_key"]
 		self.tries = 0
-		self.duration = ''
+		self.duration = 0
 		self.ffmpeg = ''
 		if shots < 2:
 			self.shots = 2
@@ -616,8 +617,24 @@ class Imgur(object):
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
 			exit(1)
-		self.duration = re.findall(r'Duration:\D(\d{2}):(\d{2}):(\d{2})', self.ffmpeg.stdout.read())
-		self.duration = int(self.duration[0][0]) * 3600 + int(self.duration[0][1]) * 60 + int(self.duration[0][2])
+		ffmpeg_out = self.ffmpeg.stdout.read()
+		ffmpeg_duration = re.findall(r'Duration:\D(\d{2}):(\d{2}):(\d{2})', ffmpeg_out)
+		if not ffmpeg_duration:
+			# the odds of a filename collision on an md5 digest are very small
+			out_fn = '%s.txt' % md5(ffmpeg_out).hexdigest()
+			err_f = open(out_fn, 'wb')
+			err_f.write( ffmpeg_out )
+			err_f.close()
+			err_msg = ("Expected ffmpeg to mention 'Duration' but it did not;\n"+
+				"Please copy the contents of '%s' to http://pastebin.com/\n"+
+				" and send the pastebin link to the bB forum. Sorry.") % \
+					out_fn
+			raise Exception( err_msg )
+		dur = ffmpeg_duration[0]
+		dur_hh = int(dur[0])
+		dur_mm = int(dur[1])
+		dur_ss = int(dur[2])
+		self.duration = dur_hh * 3600 + dur_mm * 60 + dur_ss
 
 	def upload(self):
 		self.getDuration()
