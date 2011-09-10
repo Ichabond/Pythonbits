@@ -140,13 +140,13 @@ class PythonbitsConfig:
 		self.file.close()
 
 	def read(self, file=0):
-		if file==0:
+		if not file:
 			file=self.file
 		self.xml = parse(file)
 		self.load_strings()
 
 	def write(self, file=0):
-		if file==0:
+		if not file:
 			file=self.file
 		location = self.file.name
 		file.close()
@@ -522,7 +522,8 @@ class SearchImdb(object):
 			fh = self.opener.open(self.url + "/plotsummary")
 			synopsisPage = fh.read()
 			fh.close()
-		except:
+		except Exception, ex:
+			print >> sys.stderr, "Unable to read /plotsummary: ", ex
 			return False
 		match = re.findall(conf.strings["imdb_summary_re"], synopsisPage, re.MULTILINE)
 		if match:
@@ -713,7 +714,8 @@ if __name__ == "__main__":
 	conf.set_location(tempdir()+"config.xml")
 	try:
 		conf.read()
-	except:
+	except Exception, ex:
+		print >> sys.stderr, "Unable to read config:", ex
 		updateConfig()
 
 	search_string = args[0]
