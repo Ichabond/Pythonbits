@@ -621,9 +621,9 @@ class Imgur(object):
 		self.getDuration()
 		# Take screenshots at even increments between 20% and 80% of the duration
 		stops = range(20,81,60/(self.shots-1))
+		imgs = [ ]
 		try:
 			count=0
-			imgs = [ ]
 			for stop in stops:
 				imgs.append(tempdir()+"screen%d.png" % count)
 				subprocess.Popen([r"ffmpeg","-ss",str((self.duration * stop)/100), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", imgs[-1] ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
@@ -637,7 +637,16 @@ class Imgur(object):
 			for img in imgs:
 				params = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(img, "rb")})
 				socket = opener.open("http://api.imgur.com/2/upload.json", params)
-				read = json.loads(socket.read())
+				json_str = socket.read()
+				if hasattr(json,'loads'):
+					read = json.loads( json_str )
+				elif hasattr(json,'load'):
+					read = json.loads( json_str )
+				else:
+					err_msg = "I cannot decipher your `json`;" + \
+						"please report the following output to the bB forum:" + \
+						("%s" % dir(json))
+					raise Exception( err_msg )
 				self.imageurl.append(read['upload']['links']['original'])
 				socket.close()
 				os.remove(img)
