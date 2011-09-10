@@ -46,17 +46,15 @@ import json
 import MultipartPostHandler
 from xml.dom.minidom import Document, parse
 
-__htmlparser = True
+__converter = None
 try:
 	from HTMLParser import HTMLParser
-except:
-	__htmlparser = False
+	__converter = HTMLParser()
+except ImportError:
+	pass
 
 def __logerror(msg):
 	sys.stderr.write(msg)
-
-if __htmlparser:
-	__converter = HTMLParser()
 
 def tempdir():
 	return tempfile.gettempdir()+os.sep
@@ -66,8 +64,8 @@ def decode(text):
 	"""Takes a string and replaces any html entities it contains with their unicode
 	counterparts.
 	"""
-
-	if __htmlparser:
+	global __converter
+	if __converter:
 	## HACK, HTMLParser() sucks @ utf-8
 		return __converter.unescape(text.decode('utf-8')).encode('utf-8')
 	else:
