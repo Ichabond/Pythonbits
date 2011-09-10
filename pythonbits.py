@@ -92,18 +92,21 @@ def decode(text):
 
 class FetchError(Exception):
 	def __init__(self, value):
+		Exception.__init__(self)
 		self.parameter = value
 	def __str__(self):
 		return repr(self.parameter)
 
 class URLError(Exception):
 	def __init__(self, value):
+		Exception.__init__(self)
 		self.parameter = value
 	def __str__(self):
 		return repr(self.parameter)
 
 class Error404(Exception):
 	def __init__(self, value):
+		Exception.__init__(self)
 		self.parameter = value
 	def __str__(self):
 		return repr(self.parameter)
