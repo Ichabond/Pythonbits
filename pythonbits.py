@@ -642,11 +642,11 @@ class Imgur(object):
 				json_str = socket.read()
 				if hasattr(json,'loads'):
 					read = json.loads( json_str )
-				elif hasattr(json,'load'):
-					read = json.loads( json_str )
+				elif hasattr(json,'read'):
+					read = json.read( json_str )
 				else:
-					err_msg = "I cannot decipher your `json`;" + \
-						"please report the following output to the bB forum:" + \
+					err_msg = "I cannot decipher your `json`;\n" + \
+						"please report the following output to the bB forum:\n" + \
 						("%s" % dir(json))
 					raise Exception( err_msg )
 				self.imageurl.append(read['upload']['links']['original'])
