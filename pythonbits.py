@@ -654,9 +654,9 @@ class Imgur(object):
 		
 		try:
 			for img in imgs:
-				params = ({'key' : self.key.decode('utf-8').encode('utf-8'), 'image' : open(img, "rb")})
-				socket = opener.open("http://api.imgur.com/2/upload.json", params)
-				json_str = socket.read()
+				params=[('upload', base64.encodestring(open(img, "rb").read()))]
+				data = urllib.urlencode(params)
+				json_str =  urllib2.urlopen(urllib2.Request("https://images.baconbits.org/api.php", data)).read()
 				if hasattr(json,'loads'):
 					read = json.loads( json_str )
 				elif hasattr(json,'read'):
@@ -666,7 +666,7 @@ class Imgur(object):
 						"please report the following output to the bB forum:\n" + \
 						("%s" % dir(json))
 					raise Exception( err_msg )
-				self.imageurl.append(read['upload']['links']['original'])
+				self.imageurl.append(read['data']['img_url'])
 				socket.close()
 				os.remove(img)
 			return True
