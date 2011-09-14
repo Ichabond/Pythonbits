@@ -668,7 +668,6 @@ class Imgur(object):
 						("%s" % dir(json))
 					raise Exception( err_msg )
 				self.imageurl.append(read['data']['img_url'])
-				socket.close()
 				os.remove(img)
 			return True
 		except urllib2.URLError, s:
