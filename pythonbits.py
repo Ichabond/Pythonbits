@@ -44,6 +44,7 @@ import microdata
 import os
 import json
 import base64
+import MultipartPostHandler
 from xml.dom.minidom import Document, parse
 from hashlib import md5 # for user error feedback reports
 
