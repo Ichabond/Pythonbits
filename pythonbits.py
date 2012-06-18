@@ -731,7 +731,7 @@ if __name__ == "__main__":
 		updateConfig()
 		sys.exit(0)
 	conf = PythonbitsConfig()
-	conf.set_location(tempdir()+"config.xml")
+	conf.set_location(TMPDIR+"config.xml")
 	try:
 		conf.read()
 	except Exception, ex:
