@@ -59,7 +59,8 @@ def __logerror(msg):
 	sys.stderr.write(msg)
 
 def tempdir():
-	return tempfile.gettempdir()+os.sep
+	tmpdir = tempfile.mkdtemp(prefix="pythonbits-")
+	return tmpdir+os.sep
 
 def decode(text):
 
