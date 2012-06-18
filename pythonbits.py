@@ -61,6 +61,8 @@ def __logerror(msg):
 def tempdir():
 	tmpdir = tempfile.mkdtemp(prefix="pythonbits-")
 	return tmpdir+os.sep
+	
+TMPDIR = tempdir()
 
 def decode(text):
 
@@ -121,15 +123,17 @@ class _MyOpener(urllib.FancyURLopener):
 
 class PythonbitsConfig:
 	"""Class for holding pythonbits config strings. read() or create_dom() must be called before first use. Access strings through obj.strings[key]"""
+	
 	def __init__(self):
 		self.strings={}
-		self.file=tempdir()+"config.xml"
+		self.tempdir = TMPDIR
+		self.file=self.tempdir+"config.xml"
 		if not os.path.exists(self.file):
 			update_url = "https://github.com/Ichabond/Pythonbits/raw/master/config.xml"
 			opener = _MyOpener()
 			nconf = opener.open(update_url)
 			if nconf.info()["Status"]=="200 OK":
-				fh = open(tempdir()+"config.xml", "w")
+				fh = open(self.tempdir+"config.xml", "w")
 				fh.write(nconf.read())
 				fh.close()
 			else:
@@ -197,7 +201,7 @@ class SearchTV(object):
 		except KeyError, ke:
 			print >> sys.stderr, "Unable to look up the quickinfo template", ke
 			print >> sys.stderr, "Keys: ", conf.strings.keys()
-			print >> sys.stderr, "XML location", tempdir()
+			print >> sys.stderr, "XML location", TMPDIR
 			raise
 		# no matter how they presented it, we want it in SxE format
 		episode_cross = '%sx%s' % episode_tuple
@@ -596,6 +600,7 @@ def findMediaInfo( path ):
 	return mediainfo
 
 class Imgur(object):
+
 	def __init__(self, path, shots = 2):
 		self.path = path
 		self.imageurl = []
@@ -646,7 +651,7 @@ class Imgur(object):
 		try:
 			count=0
 			for stop in stops:
-				imgs.append(tempdir()+"screen%d.png" % count)
+				imgs.append(TMPDIR+"screen%d.png" % count)
 				subprocess.Popen([r"ffmpeg","-ss",str((self.duration * stop)/100), "-vframes", "1", "-i", self.path , "-y", "-sameq", "-f", "image2", imgs[-1] ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).wait()
 				count+=1
 		except OSError:
@@ -685,14 +690,14 @@ def updateConfig():
 	opener = _MyOpener()
 	newconf = opener.open(update_url)
 	if newconf.info()["Status"]=="200 OK":
-		fh = open(tempdir()+"config.xml", "w")
+		fh = open(TMPDIR+"config.xml", "w")
 		fh.write(newconf.read())
 		fh.close()
 		print "Config file succesfully updated"
 	else:
 		__logerror("Cannot update config file.")
 	newconf.close()
-	os.chmod(tempdir()+"config.xml", 0777)
+	os.chmod(TMPDIR+"config.xml", 0777)
 
 if __name__ == "__main__":
 	from optparse import OptionParser
