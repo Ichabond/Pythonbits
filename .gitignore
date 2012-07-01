@@ -2,3 +2,10 @@
 .idea
 .DS_Store
 /.DS_Store
+.Python
+bin/
+build/
+doc/
+etc/
+include/
+lib/
