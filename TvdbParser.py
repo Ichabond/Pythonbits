@@ -59,7 +59,7 @@ class TVDB(object):
 					'writer' : self.episode['writer'], 'rating' : self.episode['rating'], 'summary' : self.episode['overview'],
 					'language' : self.episode['language'], 'genre' : self.tvdb[int(self.episode['seriesid'])]['genre'], 
 					'url' : "http://thetvdb.com/?tab=episode&seriesid="+self.episode['seriesid']+"&seasonid="+self.episode['seasonid']+"&id="+self.episode['id'],
-					'series' : self.show['seriesname']}
+					'series' : self.show['seriesname'], 'seriessummary' : self.show['overview']}
 		elif isinstance(self.season, tvdb_api.Season):
 			summary = {'episodes' : len(self.season), 'series' : self.show['seriesname']}
 			for (counter, episode) in enumerate(self.season):
