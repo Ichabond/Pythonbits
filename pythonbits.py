@@ -68,7 +68,6 @@ def generateMoviesSummary(summary):
 	description = description + "Runtime: %s\n" %summary['runtime']
 	description = description + "Director(s): %s\n" % summary['director']
 	description = description + "Writer(s): %s\n" % summary['writers']
-	description = description + "Composer(s): %s\n" % summary['music']
 	description = description + "[/quote]"
 		
 	return description
