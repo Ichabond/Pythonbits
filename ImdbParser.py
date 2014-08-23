@@ -62,11 +62,12 @@ class IMDB(object):
                 
     def summary(self):
         if self.movie:
-            return {'director' : u" | ".join([director.name for director in self.movie.directors]), 
+
+            return {'director' : u" | ".join([director.name for director in self.movie.directors_summary]), 
                     'runtime' : self.movie.runtime, 'rating' : self.movie.rating, 
                     'name' : self.movie.title, 'votes' : self.movie.votes, 'cover' : self.movie.cover_url, 
                     'genre' : u" | ".join([genre for genre in self.movie.genres]), 
-                    'writers' : u" | ".join([writer.name for writer in self.movie.writers]), 'mpaa' : self.movie.certification,
+                    'writers' : u" | ".join([writer.name for writer in self.movie.writers_summary]), 'mpaa' : self.movie.certification,
                     'description' : self.movie.plot_outline, 
                     'url' : u"http://www.imdb.com/title/%s" % self.movie.imdb_id, 
                     'year' : self.movie.year}
