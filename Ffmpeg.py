@@ -3,7 +3,7 @@
 """
 Ffmpeg.py
 
-Created by Tom Strickx on 2012-07-01.
+Created by Ichabond on 2012-07-01.
 Copyright (c) 2012 Baconseed. All rights reserved.
 """
 
