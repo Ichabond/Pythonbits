@@ -47,7 +47,7 @@ class IMDB(object):
         except ValueError as e:
             try:
                 selection = int(raw_input("This is not a correct movie-identifier, try again [0-%s]: " % (len(self.results)-1)))
-                self.movie = self.imdb.get_movie(self.imdb.get_imdbID(self.results[selection]))
+                self.movie = self.imdb.find_movie_by_id(self.results[selection]['imdb_id'])
             except (ValueError, IndexError) as e:
                 print >> sys.stderr, "You failed"
                 print >> sys.stderr, e
@@ -55,7 +55,7 @@ class IMDB(object):
         except IndexError as e:
             try:
                 selection = int(raw_input("Your chosen value does not match a movie, try again [0-%s]: " % (len(self.results)-1)))
-                self.movie = self.imdb.get_movie(self.imdb.get_imdbID(self.results[selection]))
+                self.movie = self.imdb.find_movie_by_id(self.results[selection]['imdb_id'])
             except (ValueError, IndexError) as e:
                 print >> sys.stderr, "You failed"
                 print >> sys.stderr, e
