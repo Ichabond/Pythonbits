@@ -52,7 +52,7 @@ class FFMpeg (object):
 			for stop in stops:
 				imgs.append(self.tempdir+"screen%s.png" % stop)
 				subprocess.Popen([r"ffmpeg","-ss",str((self.duration * stop)/100), "-i", self.file, "-vframes", "1", 
-									"-y", "-qscale", "0",  "-f", "image2", imgs[-1] ], 
+									"-y",  "-f", "image2", imgs[-1] ], 
 									stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
 		except OSError:
 			sys.stderr.write("Error: Ffmpeg not installed, refer to http://www.ffmpeg.org/download.html for installation")
