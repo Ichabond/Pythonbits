@@ -1,0 +1,4 @@
+imdbpie==1.4.4
+requests==2.3.0
+tvdb-api==1.9
+wsgiref==0.1.2
