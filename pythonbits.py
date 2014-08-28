@@ -22,7 +22,10 @@ from optparse import OptionParser
 def generateSeriesSummary(summary):
 	
 	description = "[b]Description[/b] \n"
-	description = description + "[quote]%s\n[spoiler]%s[/spoiler][/quote]\n" % (summary['seriessummary'], summary['summary'])
+	if hasattr(summary, 'seriessummary'):
+                description = description + "[quote]%s\n[spoiler]%s[/spoiler][/quote]\n" % (summary['seriessummary'], summary['summary'])
+        else:   
+                description = description + "[quote]%s[/quote]\n" % (summary['summary'])
 	description = description + "[b]Information:[/b]\n"
 	description = description +"[quote]TVDB Url: %s\n" % summary['url']
 	if hasattr(summary, 'title'):
