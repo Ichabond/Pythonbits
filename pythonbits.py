@@ -25,7 +25,7 @@ def generateSeriesSummary(summary):
 	if hasattr(summary, 'seriessummary'):
                 description = description + "[quote]%s\n[spoiler]%s[/spoiler][/quote]\n" % (summary['seriessummary'], summary['summary'])
         else:   
-                description = description + "[quote]%s[/quote]\n" % (summary['summary'])
+                description = description + "[quote]%s[/quote]\n" % summary['summary']
 	description = description + "[b]Information:[/b]\n"
 	description = description +"[quote]TVDB Url: %s\n" % summary['url']
 	if hasattr(summary, 'title'):
@@ -91,21 +91,35 @@ def findMediaInfo(path):
 def main(argv):
 	usage = 'Usage: %prog [OPTIONS] "MOVIENAME/SERIESNAME" FILENAME'
 	parser = OptionParser(usage=usage, version="%%prog %s" % __version_str__)
+	parser.add_option("-I", "--info", action="store_const", const=1, dest="info",
+		help="Output only info, uses episode or season arguments if available")
 	parser.add_option("-e", "--episode", type="string", action="store", dest="episode",
 		help="Provide the TV episode identifier (1x2 or S01E02)")
-	parser.add_option("-p", "--season", type="int", action="store", dest="season", help="Provide the seasonnumber for seasonpacks")
+	parser.add_option("-p", "--season", type="int", action="store", dest="season", help="Provide the season number for seasonpacks")
 	parser.add_option("-s", "--screenshots", type="int", action="store", dest="screenshots", help="Set the amount of screenshots, max 7")
+	parser.add_option("-S", "--screenshotsonly", type="int", action="store", dest="screenshotsonly", help="Output only screenshots, set the amount of screenshots, max 7")
 	options, args = parser.parse_args()
 	if len(args) == 0:
 		parser.print_help()
 		sys.exit(1)
-	search_string = args[0]
-	filename = args[1]
-	if options.screenshots:
-		screenshot = createScreenshots(filename, shots=options.screenshots)
+	if options.screenshotsonly:
+		filename = args[0]
 	else:
-		screenshot = createScreenshots(filename)
-	if options.season or options.episode:
+		search_string = args[0]
+		if options.info != 1:
+			filename = args[1]
+			if options.screenshots:
+				screenshot = createScreenshots(filename, shots=options.screenshots)
+			else:
+				screenshot = createScreenshots(filename)
+			if options.screenshotsonly:
+				screenshot = createScreenshots(filename, shots=options.screenshotsonly)
+			else:
+				screenshot = createScreenshots(filename)
+	if options.screenshotsonly:
+		for shot in screenshot:
+			print shot
+	elif options.season or options.episode:
 		tvdb = TvdbParser.TVDB()
 		if options.season:
 			tvdb.search(search_string, season=options.season)
@@ -113,15 +127,15 @@ def main(argv):
 			tvdb.search(search_string, episode=options.episode)
 		summary = tvdb.summary()
 		summary = generateSeriesSummary(summary)
-		summary = summary + "Screenshots:\n[quote][align=center]"
-		for shot in screenshot:
-			summary = summary + "[img=%s]" % shot
-		summary = summary + "[/align][/quote]"
-		mediainfo = findMediaInfo(filename)
-		if mediainfo:
-			summary = summary + "[mediainfo]\n%s\n[/mediainfo]" % mediainfo
+		if options.info != 1:
+			summary = summary + "Screenshots:\n[quote][align=center]"
+			for shot in screenshot:
+				summary = summary + "[img=%s]" % shot
+			summary = summary + "[/align][/quote]"
+			mediainfo = findMediaInfo(filename)
+			if mediainfo:
+				summary = summary + "[mediainfo]\n%s\n[/mediainfo]" % mediainfo
 		print summary
-		
 	else:
 		imdb = ImdbParser.IMDB()
 		imdb.search(search_string)
@@ -133,14 +147,15 @@ def main(argv):
 		print "\n\n\n"
 		print "Movie Description: \n", movie
 		print "\n\n\n"
-		mediainfo = findMediaInfo(filename)
-		if mediainfo:
-			print "Mediainfo: \n", mediainfo
-		for shot in screenshot:
-			print "Screenshot: %s" % shot
-		cover = Upload([summary['cover']]).upload()
-		if cover:
-			print "Image (Optional): ", cover[0]
+		if options.info != 1:
+			mediainfo = findMediaInfo(filename)
+			if mediainfo:
+				print "Mediainfo: \n", mediainfo
+			for shot in screenshot:
+				print "Screenshot: %s" % shot
+			cover = Upload([summary['cover']]).upload()
+			if cover:
+				print "Image (Optional): ", cover[0]
 			
 		
 		
