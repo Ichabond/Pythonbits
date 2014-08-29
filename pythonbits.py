@@ -107,7 +107,7 @@ def main(argv):
 		screenshot = createScreenshots(filename, shots=options.screenshotsonly)
 	else:
 		search_string = args[0]
-		if !options.info:
+		if not options.info:
 			filename = args[1]
 			if options.screenshots:
 				screenshot = createScreenshots(filename, shots=options.screenshots)
@@ -124,7 +124,7 @@ def main(argv):
 			tvdb.search(search_string, episode=options.episode)
 		summary = tvdb.summary()
 		summary = generateSeriesSummary(summary)
-		if !options.info:
+		if not options.info:
 			summary = summary + "Screenshots:\n[quote][align=center]"
 			for shot in screenshot:
 				summary = summary + "[img=%s]" % shot
@@ -144,7 +144,7 @@ def main(argv):
 		print "\n\n\n"
 		print "Movie Description: \n", movie
 		print "\n\n\n"
-		if !options.info:
+		if not options.info:
 			mediainfo = findMediaInfo(filename)
 			if mediainfo:
 				print "Mediainfo: \n", mediainfo
