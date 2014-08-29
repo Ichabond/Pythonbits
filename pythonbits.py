@@ -95,7 +95,7 @@ def main(argv):
 		help="Output only info, uses episode or season arguments if available")
 	parser.add_option("-e", "--episode", type="string", action="store", dest="episode",
 		help="Provide the TV episode identifier (1x2 or S01E02)")
-	parser.add_option("-p", "--season", type="int", action="store", dest="season", help="Provide the season number for seasonpacks")
+	parser.add_option("-p", "--season", type="int", action="store", dest="season", help="Provide the season number for season packs")
 	parser.add_option("-s", "--screenshots", type="int", action="store", dest="screenshots", help="Set the amount of screenshots, max 7")
 	parser.add_option("-S", "--screenshotsonly", type="int", action="store", dest="screenshotsonly", help="Output only screenshots, set the amount of screenshots, max 7")
 	options, args = parser.parse_args()
