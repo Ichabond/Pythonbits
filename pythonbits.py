@@ -22,13 +22,13 @@ from optparse import OptionParser
 def generateSeriesSummary(summary):
 	
 	description = "[b]Description[/b] \n"
-	if hasattr(summary, 'seriessummary'):
+	if 'seriessummary' in summary:
                 description = description + "[quote]%s\n[spoiler]%s[/spoiler][/quote]\n" % (summary['seriessummary'], summary['summary'])
         else:   
                 description = description + "[quote]%s[/quote]\n" % summary['summary']
 	description = description + "[b]Information:[/b]\n"
 	description = description +"[quote]TVDB Url: %s\n" % summary['url']
-	if hasattr(summary, 'title'):
+	if 'title' in summary:
 		description = description + "Title %s\n" % summary['title']
 	description = description + "Show: %s\n" % summary['series']
 	if 'aired' in summary:
@@ -91,7 +91,7 @@ def findMediaInfo(path):
 def main(argv):
 	usage = 'Usage: %prog [OPTIONS] "MOVIENAME/SERIESNAME" FILENAME'
 	parser = OptionParser(usage=usage, version="%%prog %s" % __version_str__)
-	parser.add_option("-I", "--info", action="store_const", const=1, dest="info",
+	parser.add_option("-I", "--info", action="store_true", dest="info",
 		help="Output only info, uses episode or season arguments if available")
 	parser.add_option("-e", "--episode", type="string", action="store", dest="episode",
 		help="Provide the TV episode identifier (1x2 or S01E02)")
@@ -104,16 +104,13 @@ def main(argv):
 		sys.exit(1)
 	if options.screenshotsonly:
 		filename = args[0]
+		screenshot = createScreenshots(filename, shots=options.screenshotsonly)
 	else:
 		search_string = args[0]
-		if options.info != 1:
+		if options.info != True:
 			filename = args[1]
 			if options.screenshots:
 				screenshot = createScreenshots(filename, shots=options.screenshots)
-			else:
-				screenshot = createScreenshots(filename)
-			if options.screenshotsonly:
-				screenshot = createScreenshots(filename, shots=options.screenshotsonly)
 			else:
 				screenshot = createScreenshots(filename)
 	if options.screenshotsonly:
@@ -127,7 +124,7 @@ def main(argv):
 			tvdb.search(search_string, episode=options.episode)
 		summary = tvdb.summary()
 		summary = generateSeriesSummary(summary)
-		if options.info != 1:
+		if options.info != True:
 			summary = summary + "Screenshots:\n[quote][align=center]"
 			for shot in screenshot:
 				summary = summary + "[img=%s]" % shot
@@ -147,7 +144,7 @@ def main(argv):
 		print "\n\n\n"
 		print "Movie Description: \n", movie
 		print "\n\n\n"
-		if options.info != 1:
+		if options.info != True:
 			mediainfo = findMediaInfo(filename)
 			if mediainfo:
 				print "Mediainfo: \n", mediainfo
