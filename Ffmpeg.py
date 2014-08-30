@@ -10,6 +10,7 @@ Copyright (c) 2012 Baconseed. All rights reserved.
 import os, subprocess, sys, re
 
 from tempfile import mkdtemp
+from hashlib import md5
 
 class FFMpeg (object):
 	
