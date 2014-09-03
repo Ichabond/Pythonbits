@@ -49,9 +49,9 @@ def generateSeriesSummary(summary):
 		description = description + "Season: %s\n" % summary['season']
 	if 'episode1' in summary:
 		description = description + "Episodes:\n[list]\n"
-		for key in summary:
-			if key.startswith('episode'):
-				description = description + "[*] %s\n" % summary[key]
+		for i, key in enumerate(summary):
+			if (key.startswith('episode') and i <= summary['episodes']):
+				description = description + "[*] %s\n" % summary['episode'+str(i)]
 		description = description + "[/list]"
 	description = description + "[/quote]"
 	
