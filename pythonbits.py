@@ -50,8 +50,8 @@ def generateSeriesSummary(summary):
 	if 'episode1' in summary:
 		description = description + "Episodes:\n[list=1]\n"
 		for i, key in enumerate(summary):
-        	if i in range (1,summary['episodes']+1):
-                description = description + "[*] %s\n" % summary['episode'+str(i)]
+			if i in range (1,summary['episodes']+1):
+				description = description + "[*] %s\n" % summary['episode'+str(i)]
 		description = description + "[/list]"
 	description = description + "[/quote]"
 	
