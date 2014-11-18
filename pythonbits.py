@@ -29,7 +29,7 @@ def generateSeriesSummary(summary):
 	description = description + "[b]Information:[/b]\n"
 	description = description +"[quote]TVDB Url: %s\n" % summary['url']
 	if 'title' in summary:
-		description = description + "Title %s\n" % summary['title']
+		description = description + "Title: %s\n" % summary['title']
 	description = description + "Show: %s\n" % summary['series']
 	if 'aired' in summary:
 		description = description + "Aired: %s\n" % summary['aired']
