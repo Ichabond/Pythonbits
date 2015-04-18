@@ -10,9 +10,10 @@ Copyright (c) 2012 Baconseed. All rights reserved.
 from Ffmpeg import FFMpeg
 from ImageUploader import Upload
 
+
 def createScreenshots(file, shots=2):
-	ffmpeg = FFMpeg(file)
-	images = ffmpeg.takeScreenshots(shots)
-	urls = Upload(images).upload()
-	
-	return urls
+    ffmpeg = FFMpeg(file)
+    images = ffmpeg.takeScreenshots(shots)
+    urls = Upload(images).upload()
+
+    return urls
