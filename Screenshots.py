@@ -8,12 +8,12 @@ Copyright (c) 2012 Baconseed. All rights reserved.
 """
 
 from Ffmpeg import FFMpeg
-from ImageUploader import Upload
+from ImgurUploader import ImgurUploader
 
 
 def createScreenshots(file, shots=2):
     ffmpeg = FFMpeg(file)
     images = ffmpeg.takeScreenshots(shots)
-    urls = Upload(images).upload()
+    urls = ImgurUploader(images).upload()
 
     return urls
