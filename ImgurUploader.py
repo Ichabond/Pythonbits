@@ -5,6 +5,7 @@ import json
 import MultipartPostHandler
 import re
 import os
+import sys
 
 
 API_URL = 'https://api.imgur.com/'
@@ -109,6 +110,7 @@ class ImgurAuth(object):
             self.refresh_token = response["refresh_token"]
 
         print("Logged in to Imgur as %s" % response["account_username"])
+        print
 
     def get_auth_header(self):
        return ("Authorization", "Bearer %s" % IMGUR_AUTH.access_token)
@@ -128,8 +130,8 @@ class ImgurUploader(object):
         opener = urllib2.build_opener(MultipartPostHandler.MultipartPostHandler)
         opener.addheaders = [IMGUR_AUTH.get_auth_header()]
         matcher = re.compile(r'http(s)*://')
-        try:
-            for image in self.images:
+        for image in self.images:
+            try:
                 if matcher.match(image):
                     params = ({'image': image})
                 else:
@@ -139,9 +141,24 @@ class ImgurUploader(object):
                 response = json.loads(res)
                 if response["success"] and response["data"]:
                     link = response["data"]["link"]
-                    self.imageurls.append(link)
+                    extensions = [path.split(".")[-1] for path in (image, link)]
+                    if extensions[0] != extensions[1]:
+                        placeholder = image.split("/")[-1]
+                        print("WARNING: Imgur converted %s to a %s." % (extensions[0], extensions[1]))
+                        print("Please upload elsewhere and replace the placeholder link.")
+                        print("Imgur link: %s" % link)
+                        print("Placeholder: %s" % placeholder)
+                        print("File: %s" % image)
+                        print
+                        self.imageurls.append(placeholder)
+                    else:
+                        self.imageurls.append(link)
                 else:
                     print("Could not upload image: %s, skipping. Result: " % (image, res))
-        except Exception as e:
-            print e
+            except Exception as e:
+                    print("Exception uploading image: %s, skipping. Exception: " % (image, e))
         return self.imageurls
+
+if __name__ == "__main__":
+    results = ImgurUploader([sys.argv[1]]).upload()
+    print(results)
