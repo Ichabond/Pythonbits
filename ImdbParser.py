@@ -12,6 +12,7 @@ imdb parsing.
 
 import sys
 import json
+from attrdict import AttrDict
 
 try:
     import imdbpie
@@ -28,8 +29,8 @@ class IMDB(object):
 
     def search(self, title):
         try:
-            results = self.imdb.find_by_title(title)
-        except imdb.IMDbError, e:
+            results = self.imdb.search_for_title(title)
+        except imdbpie.ImdbAPIError, e:
             print >> sys.stderr, "You probably don't have an internet connection. Complete error report:"
             print >> sys.stderr, e
             sys.exit(3)
@@ -43,13 +44,13 @@ class IMDB(object):
                 outp = u'%s: %s (%s)' % (counter, movie['title'], movie['year'])
                 print outp
             selection = int(raw_input('Select the correct movie [0-%s]: ' % (len(self.results) - 1)))
-            self.movie = self.imdb.find_movie_by_id(self.results[selection]['imdb_id'])
+            self.movie = AttrDict(self.imdb.get_title(self.results[selection]['imdb_id']))
 
         except ValueError as e:
             try:
                 selection = int(
                     raw_input("This is not a correct movie-identifier, try again [0-%s]: " % (len(self.results) - 1)))
-                self.movie = self.imdb.find_movie_by_id(self.results[selection]['imdb_id'])
+                self.movie = AttrDict(self.imdb.get_title(self.results[selection]['imdb_id']))
             except (ValueError, IndexError) as e:
                 print >> sys.stderr, "You failed"
                 print >> sys.stderr, e
@@ -58,22 +59,26 @@ class IMDB(object):
             try:
                 selection = int(
                     raw_input("Your chosen value does not match a movie, try again [0-%s]: " % (len(self.results) - 1)))
-                self.movie = self.imdb.find_movie_by_id(self.results[selection]['imdb_id'])
+                self.movie = AttrDict(self.imdb.get_title(self.results[selection]['imdb_id']))
             except (ValueError, IndexError) as e:
                 print >> sys.stderr, "You failed"
                 print >> sys.stderr, e
 
     def summary(self):
         if self.movie:
-            return {'director': u" | ".join([director.name for director in self.movie.directors_summary]),
-                    'runtime': self.movie.runtime, 'rating': self.movie.rating,
-                    'name': self.movie.title, 'votes': self.movie.votes, 'cover': self.movie.cover_url,
+            movie_id = self.movie.base.id.split('/')[2]
+            self.movie.credits = self.imdb.get_title_credits(movie_id)['credits']
+            self.movie.genres = self.imdb.get_title_genres(movie_id)['genres']
+            
+            return {'director': u" | ".join([director.name for director in self.movie.credits.director]),
+                    'runtime': self.movie.base.runningTimeInMinutes, 'rating': self.movie.ratings.rating,
+                    'name': self.movie.base.title, 'votes': self.movie.ratings.ratingCount, 'cover': self.movie.base.image.url,
                     'genre': u" | ".join([genre for genre in self.movie.genres]),
-                    'writers': u" | ".join([writer.name for writer in self.movie.writers_summary]),
-                    'mpaa': self.movie.certification,
-                    'description': self.movie.plot_outline,
-                    'url': u"http://www.imdb.com/title/%s" % self.movie.imdb_id,
-                    'year': self.movie.year}
+                    'writers': u" | ".join([writer.name for writer in self.movie.credits.writer]),
+                    'mpaa': u"N/A",
+                    'description': self.movie.plot.outline.text,
+                    'url': u"http://www.imdb.com/title/%s" % movie_id,
+                    'year': self.movie.base.year}
 
 
 if __name__ == "__main__":

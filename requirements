@@ -1,4 +1,5 @@
-imdbpie==1.4.4
-requests==2.3.0
+imdbpie==5.2.0
+requests~=2.18
 tvdb-api==1.9
 wsgiref==0.1.2
+attrdict==2.0.0
