@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # encoding: utf-8
 """
 ImdbParser.py
@@ -71,11 +71,12 @@ class IMDB(object):
             self.movie.genres = self.imdb.get_title_genres(movie_id)['genres']
             
             return {'director': u" | ".join([director.name for director in self.movie.credits.director]),
-                    'runtime': self.movie.base.runningTimeInMinutes, 'rating': self.movie.ratings.rating,
+                    'runtime': str(self.movie.base.runningTimeInMinutes)+" min", 'rating': self.movie.ratings.rating,
                     'name': self.movie.base.title, 'votes': self.movie.ratings.ratingCount, 'cover': self.movie.base.image.url,
-                    'genre': u" | ".join([genre for genre in self.movie.genres]),
+                    'genres': self.movie.genres,
+                    'cast': [actor.name for actor in self.movie.credits.cast],
                     'writers': u" | ".join([writer.name for writer in self.movie.credits.writer]),
-                    'mpaa': u"N/A",
+                    'mpaa': u"",
                     'description': self.movie.plot.outline.text,
                     'url': u"http://www.imdb.com/title/%s" % movie_id,
                     'year': self.movie.base.year}
