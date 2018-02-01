@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # encoding: utf-8
 """
 Pythonbits2.py
@@ -12,6 +12,7 @@ __version_str__ = '.'.join(str(x) for x in __version__)
 import sys
 import os
 import subprocess
+import unicodedata
 
 import ImdbParser
 import TvdbParser
@@ -79,6 +80,19 @@ def generateMoviesSummary(summary):
 
     return description
 
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    only_ascii = nfkd_form.encode('ASCII', 'ignore')
+    return only_ascii
+
+def generateTags(summary, num_cast=5):
+    cast = [remove_accents(actor
+                      ).replace(' ','.'
+                      ).replace('-','.'
+                      ).replace('\'','.'
+                      ).lower() for actor in summary['cast']]
+    genres = [g.replace('-','.').lower() for g in summary['genres']]
+    return genres+cast[:num_cast]
 
 def findMediaInfo(path):
     mediainfo = None
@@ -149,15 +163,18 @@ def main(argv):
         imdb.movieSelector()
         summary = imdb.summary()
         movie = generateMoviesSummary(summary)
+        tags = generateTags(summary)
         print "\n\n\n"
         print "Year: ", summary['year']
+        print "\n\n\n"
+        print "Tags: ", ",".join(tags)
         print "\n\n\n"
         print "Movie Description: \n", movie
         print "\n\n\n"
         if not options.info:
             mediainfo = findMediaInfo(filename)
             if mediainfo:
-                print "Mediainfo: \n", mediainfo
+                print "Mediainfo: \n", "[mediainfo]\n",mediainfo,"\n[/mediainfo]"
             for shot in screenshot:
                 print "Screenshot: %s" % shot
             cover = ImgurUploader([summary['cover']]).upload()
