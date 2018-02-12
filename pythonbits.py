@@ -179,7 +179,7 @@ def main(argv):
                 print "Screenshot: %s" % shot
             cover = ImgurUploader([summary['cover']]).upload()
             if cover:
-                print "Image (Optional): ", cover[0]
+                print "Image: ", cover[0]
 
 
 if __name__ == '__main__':
